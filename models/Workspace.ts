@@ -1,44 +1,65 @@
-import { DataTypes } from 'sequelize';
-import db from '../db/db';
-
+import {
+    Model,
+    Column,
+    Table,
+    PrimaryKey,
+    DataType,
+    Default
+} from 'sequelize-typescript';
 //Workspace
 
-const Workspace = db.define('Workspace', {
-    _id: {
-        type: DataTypes.UUID,
-        defaultValue: DataTypes.UUIDV4,
-        primaryKey: true
-    },
-    name: {
-        type: DataTypes.STRING,
-        allowNull: false,
-    },
-    description: {
-        type: DataTypes.STRING,
+@Table({
+    tableName: 'workspaces'
+})
+class Workspace extends Model {
+    @PrimaryKey
+    @Default(DataType.UUIDV4)
+    @Column(DataType.UUID)
+    id!: number;
+
+    @Column({
+        type: DataType.STRING,
+        allowNull: false
+    })
+    name!: string;
+
+    @Column({
+        type: DataType.STRING,
         allowNull: true
-    },
-    ownerId: {
-        type: DataTypes.UUID,
-        allowNull: false,
-    },
-    isPrivate: {
-        type: DataTypes.BOOLEAN,
+    })
+    description!: string;
+
+    @Column({
+        type: DataType.UUID,
+        allowNull: false
+    })
+    ownerId!: number;
+
+    @Column({
+        type: DataType.BOOLEAN,
         allowNull: false,
         defaultValue: false
-    },
-    isActive: {
-        type: DataTypes.BOOLEAN,
+    })
+    isPrivate!: boolean;
+
+    @Column({
+        type: DataType.BOOLEAN,
         allowNull: false,
         defaultValue: true
-    },
-    memberLimit: {
-        type: DataTypes.INTEGER,
-        allowNull: true
-    },
-    image: {
-        type: DataTypes.STRING,
-        allowNull: true
-    }
-});
+    })
+    isActive!: boolean;
 
-module.exports = Workspace;
+    @Column({
+        type: DataType.INTEGER,
+        allowNull: true
+    })
+    memberLimit!: number;
+
+    @Column({
+        type: DataType.STRING,
+        allowNull: true
+    })
+    image!: string;
+}
+
+export { Workspace };

@@ -2,6 +2,7 @@ import { Sequelize } from 'sequelize-typescript';
 import dotenv from 'dotenv';
 import pg from 'pg';
 import { User } from '../models/User';
+import { Workspace } from '../models/Workspace';
 
 dotenv.config();
 
@@ -26,7 +27,7 @@ const sequelize = new Sequelize(
     }
 );
 
-sequelize.addModels([User]);
+sequelize.addModels([User, Workspace]);
 
 async function validateDBConnection() {
     try {

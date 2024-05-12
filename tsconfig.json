@@ -9,7 +9,10 @@
         "outDir": "./dist",
         "allowJs": true,
         "experimentalDecorators": true,
-        "emitDecoratorMetadata": true
+        "emitDecoratorMetadata": true,
+        "baseUrl": "./",
+        "typeRoots": ["./types", "./node_modules/@types"],
+        "types": ["express"]
     },
     "include": [
         "./controllers/**/*.ts",
