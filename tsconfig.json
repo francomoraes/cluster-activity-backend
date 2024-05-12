@@ -1,0 +1,25 @@
+{
+    "compilerOptions": {
+        "target": "es6",
+        "module": "commonjs",
+        "strict": true,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "outDir": "./dist",
+        "allowJs": true,
+        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true
+    },
+    "include": [
+        "./controllers/**/*.ts",
+        "./db/**/*.ts",
+        "./helpers/**/*.ts",
+        "./models/**/*.ts",
+        "./public/**/*.ts",
+        "./routes/**/*.ts",
+        "./index.ts",
+        "types/**/*.ts"
+    ],
+    "exclude": ["node_modules"]
+}

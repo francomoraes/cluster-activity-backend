@@ -1,6 +1,5 @@
-const { DataTypes } = require('sequelize');
-
-const db = require('../db/db');
+import { DataTypes } from 'sequelize';
+import db from '../db/db';
 
 //Workspace
 
@@ -13,28 +12,23 @@ const Workspace = db.define('Workspace', {
     name: {
         type: DataTypes.STRING,
         allowNull: false,
-        require: true
     },
     description: {
         type: DataTypes.STRING,
-        allowNull: true,
-        require: false
+        allowNull: true
     },
     ownerId: {
         type: DataTypes.UUID,
         allowNull: false,
-        require: true
     },
     isPrivate: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        require: true,
         defaultValue: false
     },
     isActive: {
         type: DataTypes.BOOLEAN,
         allowNull: false,
-        require: true,
         defaultValue: true
     },
     memberLimit: {
@@ -43,8 +37,7 @@ const Workspace = db.define('Workspace', {
     },
     image: {
         type: DataTypes.STRING,
-        allowNull: true,
-        require: false
+        allowNull: true
     }
 });
 

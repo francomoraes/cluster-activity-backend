@@ -1,26 +1,16 @@
-const express = require('express')
-const cors = require('cors')
-const db = require('./db/db')
+import express from 'express';
+import cors from 'cors';
+import db from './db/db';
+import UserRoutes from './routes/UserRoutes';
 
 const app = express()
 
-// Config dotenv
-require('dotenv').config()
-
-// Config JSON response
 app.use(express.json())
-
-// Config CORS
 app.use(cors({
     credentials: true,
     origin: 'http://localhost:5173'
 }))
-
-// Public folder for static assets
 app.use(express.static('public'))
-
-// Routes
-const UserRoutes = require('./routes/UserRoutes')
 
 app.use('/users', UserRoutes)
 
@@ -30,6 +20,6 @@ db
         app.listen(5000, () => {
             console.log('Server is running on port 5000')
         })
-    }).catch((error) => {
+    }).catch((error: Error) => {
         console.log('Error: ', error)
     })
