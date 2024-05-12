@@ -4,7 +4,6 @@ import { UserController } from '../controllers/UserController';
 import imageUpload from '../helpers/image-upload';
 
 // middleware
-
 const router = express.Router();
 
 router.post('/register', UserController.register);
