@@ -1,17 +1,35 @@
-import getToken from '../helpers/get-token';
-import getUserByToken from '../helpers/get-user-by-token';
 import { Workspace } from '../models/Workspace';
 import { Request, Response } from 'express';
+import { appController } from './appController';
+import getToken from '../helpers/get-token';
+import getUserByToken from '../helpers/get-user-by-token';
+import { User } from '../models';
 
-export class WorkspaceController {
-    static async createWorkspace(req: Request, res: Response) {
-        const { name, description, isPrivate, ownerId } = req.body;
+export class WorkspaceController extends appController {
+    getEntity() {
+        return {
+            name: 'Workspace',
+            model: Workspace
+        };
+    }
+
+    getIncludes() {
+        return [
+            {
+                model: User,
+                as: 'owner',
+                attributes: ['id', 'name', 'email']
+            }
+        ];
+    }
+
+    async create(req: Request, res: Response) {
+        const { name, description, isPrivate } = req.body;
 
         // validations
         let missingFields = [];
         if (!name) missingFields.push('name');
         if (!description) missingFields.push('description');
-        if (!ownerId) missingFields.push('ownerId');
 
         if (missingFields.length > 0) {
             res.status(422).json({
@@ -21,11 +39,25 @@ export class WorkspaceController {
         }
 
         try {
+            const token = getToken(req);
+
+            if (!token) {
+                res.status(401).json({ message: 'No token found' });
+                return;
+            }
+
+            const user = await getUserByToken(token);
+
+            if (!user) {
+                res.status(401).json({ message: 'No user found' });
+                return;
+            }
+
             const newWorkspace = await Workspace.create({
                 name,
                 description,
                 isPrivate,
-                ownerId,
+                ownerId: user.id,
                 isActive: true,
                 memberLimit: null,
                 image: null
@@ -37,9 +69,28 @@ export class WorkspaceController {
         }
     }
 
-    static async getWorkspaces(req: Request, res: Response) {
+    async getAllByUser(req: Request, res: Response) {
         try {
-            const workspaces = await Workspace.findAll();
+            const token = getToken(req);
+
+            if (!token) {
+                res.status(401).json({ message: 'No token found' });
+                return;
+            }
+
+            const user = await getUserByToken(token);
+
+            if (!user) {
+                res.status(401).json({ message: 'No user found' });
+                return;
+            }
+
+            const workspaces = await Workspace.findAll({
+                where: {
+                    ownerId: user.id
+                }
+            });
+            console.log('workspaces', workspaces);
 
             res.status(200).json(workspaces);
         } catch (error: any) {
@@ -47,33 +98,36 @@ export class WorkspaceController {
         }
     }
 
-    static async getWorkspaceById(req: Request, res: Response) {
-        const { id } = req.params;
+    async getById(req: Request, res: Response) {
+        const { workspaceId } = req.params;
 
         try {
-            const workspace = await Workspace.findByPk(id);
+            const entity = await this.model.findByPk(workspaceId);
 
-            if (!workspace) {
-                res.status(404).json({ message: 'Workspace not found' });
+            if (!entity) {
+                res.status(404).json({
+                    message: `${this.name} not found`
+                });
                 return;
             }
 
-            res.status(200).json(workspace);
+            res.status(200).json(entity);
         } catch (error: any) {
             res.status(500).json({ message: error.message });
         }
     }
 
-    static async updateWorkspace(req: Request, res: Response) {
-        const { id } = req.params;
-        const { name, description, isPrivate, isActive, memberLimit } =
-            req.body;
+    async update(req: Request, res: Response) {
+        const { workspaceId } = req.params;
+        const { name, description, isPrivate, isActive, memberLimit } = req.body;
 
         try {
-            const workspace = await Workspace.findByPk(id);
+            const workspace = await Workspace.findByPk(workspaceId);
 
             if (!workspace) {
-                res.status(404).json({ message: 'Workspace not found' });
+                res.status(404).json({
+                    message: 'Workspace not found'
+                });
                 return;
             }
 
@@ -90,25 +144,28 @@ export class WorkspaceController {
                 image: workspace.image
             });
 
-            res.status(200).json(workspace);
+            res.status(200).json({ message: 'Workspace updated sucessfuly', workspace });
         } catch (error: any) {
             res.status(500).json({ message: error.message });
         }
     }
 
-    static async deleteWorkspace(req: Request, res: Response) {
-        const { id } = req.params;
+    async delete(req: Request, res: Response) {
+        const { workspaceId } = req.params;
 
         try {
-            const deleted = await Workspace.destroy({ where: { id: id } });
+            const workspace = await Workspace.findByPk(workspaceId);
 
-            if (deleted) {
-                res.status(200).json({
-                    message: 'Workspace deleted successfully'
+            if (!workspace) {
+                res.status(404).json({
+                    message: 'Workspace not found'
                 });
-            } else {
-                res.status(404).json({ message: 'Workspace not found' });
+                return;
             }
+
+            await workspace.destroy();
+
+            res.status(204).json({ message: 'Workspace deleted successfully' });
         } catch (error: any) {
             res.status(500).json({ message: error.message });
         }

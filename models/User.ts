@@ -1,11 +1,6 @@
-import {
-    Model,
-    Column,
-    Table,
-    PrimaryKey,
-    DataType,
-    Default
-} from 'sequelize-typescript';
+import { Model, Column, Table, PrimaryKey, DataType, Default, HasMany } from 'sequelize-typescript';
+import { Workspace } from './Workspace';
+import { Challenge } from './Challenge';
 
 @Table({
     tableName: 'users'
@@ -39,6 +34,12 @@ class User extends Model {
         allowNull: true
     })
     avatar?: string | null;
+
+    @HasMany(() => Workspace)
+    workspaces!: Workspace[];
+
+    @HasMany(() => Challenge)
+    challenges!: Challenge[];
 }
 
 export { User };

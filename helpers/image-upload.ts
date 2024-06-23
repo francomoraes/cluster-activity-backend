@@ -7,6 +7,8 @@ const imageStorage = multer.diskStorage({
 
         if (req.baseUrl.includes('users')) {
             folder = 'users';
+        } else if (req.baseUrl.includes('challenges')) {
+            folder = 'challenges';
         } else if (req.baseUrl.includes('workspaces')) {
             folder = 'workspaces';
         }
@@ -14,12 +16,7 @@ const imageStorage = multer.diskStorage({
         cb(null, `public/images/${folder}`);
     },
     filename: function (req, file, cb) {
-        cb(
-            null,
-            Date.now() +
-                String(Math.floor(Math.random() * 100)) +
-                path.extname(file.originalname)
-        );
+        cb(null, Date.now() + String(Math.floor(Math.random() * 100)) + path.extname(file.originalname));
     }
 });
 

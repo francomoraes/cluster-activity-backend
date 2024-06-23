@@ -1,32 +1,18 @@
-import express from 'express';
-import checkToken from '../helpers/check-token';
+import { Router } from 'express';
 import { WorkspaceController } from '../controllers/WorkspaceController';
-import imageUpload from '../helpers/image-upload';
-import { checkOwnership } from '../helpers/check-ownsership';
+import challengeRoutes from './ChallengeRoutes';
+import { checkOwnership, checkToken, imageUpload } from '../helpers';
 
 // middleware
-const router = express.Router();
+const router = Router();
+const workspaceController = new WorkspaceController();
 
-router.post(
-    '/',
-    checkToken,
-    imageUpload.single('avatar'),
-    WorkspaceController.createWorkspace
-);
-router.get('/', checkToken, WorkspaceController.getWorkspaces);
-router.get('/:id', checkToken, WorkspaceController.getWorkspaceById);
-router.patch(
-    '/:id',
-    checkToken,
-    checkOwnership,
-    imageUpload.single('image'),
-    WorkspaceController.updateWorkspace
-);
-router.delete(
-    '/:id',
-    checkToken,
-    checkOwnership,
-    WorkspaceController.deleteWorkspace
-);
+router.post('/', checkToken, workspaceController.create.bind(workspaceController));
+router.get('/', checkToken, workspaceController.getAllByUser.bind(workspaceController));
+router.get('/:workspaceId', checkToken, workspaceController.getById.bind(workspaceController));
+router.patch('/:workspaceId', checkToken, checkOwnership, imageUpload.single('image'), workspaceController.update.bind(workspaceController));
+router.delete('/:workspaceId', checkToken, checkOwnership, workspaceController.delete.bind(workspaceController));
+
+router.use('/:workspaceId/challenges', challengeRoutes);
 
 export default router;

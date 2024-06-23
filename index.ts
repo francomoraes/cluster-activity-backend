@@ -19,7 +19,8 @@ app.use('/users', UserRoutes);
 app.use('/workspaces', WorkspaceRoutes);
 
 db
-    // .sync({force: true}).then(() => {
+    // .sync({ force: true })
+    // .then(() => {
     .sync()
     .then(() => {
         app.listen(5000, () => {

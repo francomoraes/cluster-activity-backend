@@ -19,15 +19,12 @@ const checkToken = (req: CustomRequest, res: Response, next: NextFunction) => {
 
     try {
         const verified = jwt.verify(token, 'JWT_SECRET');
-        console.log('verified', verified);
 
         req.user = verified;
         next();
     } catch (err: any) {
         console.error('Token verification failed:', err);
-        return res
-            .status(400)
-            .json({ message: 'Invalid token', error: err.message });
+        return res.status(400).json({ message: 'Invalid token', error: err.message });
     }
 };
 

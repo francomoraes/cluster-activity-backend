@@ -4,8 +4,10 @@ import {
     Table,
     PrimaryKey,
     DataType,
-    Default
+    Default,
+    ForeignKey
 } from 'sequelize-typescript';
+import { User } from './User';
 //Workspace
 
 @Table({
@@ -29,6 +31,7 @@ class Workspace extends Model {
     })
     description!: string;
 
+    @ForeignKey(() => User)
     @Column({
         type: DataType.UUID,
         allowNull: false

@@ -17,11 +17,9 @@ export class UserController {
         // validations
         if (!name || !email || !password || !confirmpassword) {
             res.status(422).json({
-                message: `Missing fields: ${!name ? 'name, ' : ''}${
-                    !email ? 'email, ' : ''
-                }${!password ? 'password, ' : ''}${
-                    !confirmpassword ? 'confirmpassword' : ''
-                }`
+                message: `Missing fields: ${!name ? 'name, ' : ''}${!email ? 'email, ' : ''}${
+                    !password ? 'password, ' : ''
+                }${!confirmpassword ? 'confirmpassword' : ''}`
             });
             return;
         }
@@ -180,5 +178,13 @@ export class UserController {
         } catch (error) {
             res.status(500).json({ message: error });
         }
+    }
+
+    static async getAllUsers(req: Request, res: Response) {
+        const users = await User.findAll({
+            attributes: { exclude: ['password'] }
+        });
+
+        return res.status(200).json({ users });
     }
 }

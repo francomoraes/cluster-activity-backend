@@ -8,11 +8,7 @@ interface CustomRequest extends Request {
     workspace?: any;
 }
 
-export const checkOwnership = async (
-    req: CustomRequest,
-    res: Response,
-    next: NextFunction
-) => {
+const checkOwnership = async (req: CustomRequest, res: Response, next: NextFunction) => {
     const token = getToken(req);
 
     if (!token) {
@@ -26,7 +22,7 @@ export const checkOwnership = async (
     }
 
     // Assuming you pass workspaceId through req.params
-    const workspace = await Workspace.findByPk(req.params.id);
+    const workspace = await Workspace.findByPk(req.params.workspaceId);
 
     if (!workspace) {
         return res.status(404).json({ message: 'Workspace not found' });
@@ -34,8 +30,7 @@ export const checkOwnership = async (
 
     if (user.id !== workspace.ownerId) {
         return res.status(403).json({
-            message:
-                'You are not authorized to edit this workspace. Please reach out to the owner.'
+            message: 'You are not authorized to edit this workspace. Please reach out to the owner.'
         });
     }
 
@@ -45,3 +40,5 @@ export const checkOwnership = async (
 
     next();
 };
+
+export default checkOwnership;

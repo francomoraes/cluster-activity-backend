@@ -9,12 +9,8 @@ const router = express.Router();
 router.post('/register', UserController.register);
 router.post('/login', UserController.login);
 router.get('/checkuser', UserController.checkUser);
+router.get('/all', UserController.getAllUsers);
+router.patch('/edit/:id', checkToken, imageUpload.single('avatar'), UserController.editUser);
 router.get('/:id', UserController.getUserById);
-router.patch(
-    '/edit/:id',
-    checkToken,
-    imageUpload.single('avatar'),
-    UserController.editUser
-);
 
 export default router;
