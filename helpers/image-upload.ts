@@ -7,6 +7,8 @@ const imageStorage = multer.diskStorage({
 
         if (req.baseUrl.includes('users')) {
             folder = 'users';
+        } else if (req.baseUrl.includes('activity')) {
+            folder = 'activities';
         } else if (req.baseUrl.includes('challenges')) {
             folder = 'challenges';
         } else if (req.baseUrl.includes('workspaces')) {

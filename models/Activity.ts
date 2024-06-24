@@ -23,12 +23,14 @@ class Activity extends Model {
     description!: string;
 
     @Column({
-        type: DataType.STRING
+        type: DataType.STRING,
+        allowNull: false
     })
     image!: string;
 
     @Column({
-        type: DataType.STRING
+        type: DataType.STRING,
+        allowNull: false
     })
     type!: string;
 
