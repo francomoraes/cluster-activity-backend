@@ -3,6 +3,7 @@ import { Workspace } from './Workspace';
 import { Challenge } from './Challenge';
 import { UserWorkspace } from './UserWorkspace';
 import { UserChallenge } from './UserChallenge';
+import { Activity } from './Activity';
 
 @Table({
     tableName: 'users'
@@ -48,6 +49,9 @@ class User extends Model {
 
     @BelongsToMany(() => Challenge, () => UserChallenge)
     joinedChallenges!: Challenge[];
+
+    @HasMany(() => Activity)
+    activities!: Activity[];
 }
 
 export { User };

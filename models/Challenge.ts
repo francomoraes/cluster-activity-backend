@@ -1,7 +1,8 @@
-import { Model, Column, Table, PrimaryKey, DataType, Default, ForeignKey, BelongsTo, BelongsToMany } from 'sequelize-typescript';
+import { Model, Column, Table, PrimaryKey, DataType, Default, ForeignKey, BelongsTo, BelongsToMany, HasMany } from 'sequelize-typescript';
 import { Workspace } from './Workspace';
 import { User } from './User';
 import { UserChallenge } from './UserChallenge';
+import { Activity } from './Activity';
 //Challenge
 
 @Table({
@@ -75,6 +76,9 @@ class Challenge extends Model {
 
     @BelongsToMany(() => User, () => UserChallenge)
     users!: User[];
+
+    @HasMany(() => Activity)
+    activities!: Activity[];
 }
 
 export { Challenge };
