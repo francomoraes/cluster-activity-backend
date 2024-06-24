@@ -184,4 +184,18 @@ export class UserController {
 
         return res.status(200).json({ users });
     }
+
+    static async deleteUser(req: Request, res: Response) {
+        const { id } = req.params;
+
+        const user = await User.findByPk(id);
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        await User.destroy({ where: { id } });
+
+        res.status(200).json({ message: `User ${user.name} deleted successfully` });
+    }
 }

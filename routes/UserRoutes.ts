@@ -12,5 +12,6 @@ router.get('/checkuser', UserController.checkUser);
 router.get('/all', UserController.getAllUsers);
 router.patch('/edit/:id', checkToken, imageUpload.single('avatar'), UserController.editUser);
 router.get('/:id', UserController.getUserById);
+router.delete('/:id', checkToken, UserController.deleteUser);
 
 export default router;
