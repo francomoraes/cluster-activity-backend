@@ -1,6 +1,8 @@
-import { Model, Column, Table, PrimaryKey, DataType, Default, HasMany } from 'sequelize-typescript';
+import { Model, Column, Table, PrimaryKey, DataType, Default, HasMany, BelongsToMany } from 'sequelize-typescript';
 import { Workspace } from './Workspace';
 import { Challenge } from './Challenge';
+import { UserWorkspace } from './UserWorkspace';
+import { UserChallenge } from './UserChallenge';
 
 @Table({
     tableName: 'users'
@@ -36,10 +38,16 @@ class User extends Model {
     avatar?: string | null;
 
     @HasMany(() => Workspace)
-    workspaces!: Workspace[];
+    ownedWorkspaces!: Workspace[];
+
+    @BelongsToMany(() => Workspace, () => UserWorkspace)
+    joinedWorkspaces!: Workspace[];
 
     @HasMany(() => Challenge)
-    challenges!: Challenge[];
+    createdChallenges!: Challenge[];
+
+    @BelongsToMany(() => Challenge, () => UserChallenge)
+    joinedChallenges!: Challenge[];
 }
 
 export { User };

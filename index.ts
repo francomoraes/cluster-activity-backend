@@ -20,7 +20,7 @@ app.use('/workspaces', WorkspaceRoutes);
 
 db
     // .sync({ force: true })
-    // .then(() => {
+    //     .then(() => {
     .sync()
     .then(() => {
         app.listen(5000, () => {

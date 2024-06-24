@@ -7,7 +7,7 @@ import getToken from '../helpers/get-token';
 import getUserByToken from '../helpers/get-user-by-token';
 
 export interface MyToken extends JwtPayload {
-    id?: number; // Adjust the type according to what you actually store in the token
+    id?: string;
 }
 
 export class UserController {
@@ -17,9 +17,7 @@ export class UserController {
         // validations
         if (!name || !email || !password || !confirmpassword) {
             res.status(422).json({
-                message: `Missing fields: ${!name ? 'name, ' : ''}${!email ? 'email, ' : ''}${
-                    !password ? 'password, ' : ''
-                }${!confirmpassword ? 'confirmpassword' : ''}`
+                message: `Missing fields: ${!name ? 'name, ' : ''}${!email ? 'email, ' : ''}${!password ? 'password, ' : ''}${!confirmpassword ? 'confirmpassword' : ''}`
             });
             return;
         }
@@ -35,7 +33,6 @@ export class UserController {
         }
 
         // create password
-
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
 

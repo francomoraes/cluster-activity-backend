@@ -2,6 +2,7 @@ import { Challenge } from '../models/Challenge';
 import { Request, Response } from 'express';
 import { appController } from './appController';
 import { getToken, getUserByToken } from '../helpers';
+import { User, UserChallenge } from '../models';
 
 export class ChallengeController extends appController {
     getEntity() {
@@ -53,6 +54,11 @@ export class ChallengeController extends appController {
                 ...rest
             });
 
+            await UserChallenge.create({
+                userId: user.id,
+                challengeId: newChallenge.id
+            });
+
             res.status(201).json(newChallenge);
         } catch (error: any) {
             console.log('error', error);
@@ -67,6 +73,43 @@ export class ChallengeController extends appController {
                 where: { workspaceId }
             });
             res.status(200).json(challenges);
+        } catch (error: any) {
+            res.status(500).json({ message: error.message });
+        }
+    }
+
+    async getParticipants(req: Request, res: Response) {
+        const { challengeId } = req.params;
+
+        try {
+            const challenge = await Challenge.findByPk(challengeId);
+
+            if (!challenge) {
+                res.status(404).json({ message: 'Challenge not found' });
+                return;
+            }
+
+            const users = await UserChallenge.findAll({
+                where: {
+                    challengeId: challenge.id
+                }
+            });
+
+            if (users.length === 0) {
+                res.status(404).json({ message: 'No participants found' });
+                return;
+            }
+
+            const userIds = users.map((user) => user.userId);
+
+            const participants = await User.findAll({
+                where: {
+                    id: userIds
+                },
+                attributes: { exclude: ['password'] }
+            });
+
+            res.status(200).json(participants);
         } catch (error: any) {
             res.status(500).json({ message: error.message });
         }
@@ -132,6 +175,80 @@ export class ChallengeController extends appController {
             await challenge.destroy();
 
             res.status(200).json({ message: 'Challenge deleted successfully' });
+        } catch (error: any) {
+            res.status(500).json({ message: error.message });
+        }
+    }
+
+    async joinChallenge(req: Request, res: Response) {
+        const { challengeId } = req.params;
+
+        const token = getToken(req);
+
+        if (!token) {
+            res.status(401).json({ message: 'No token found' });
+            return;
+        }
+
+        const user = await getUserByToken(token);
+
+        if (!user) {
+            res.status(401).json({ message: 'No user found' });
+            return;
+        }
+
+        try {
+            const challenge = await Challenge.findByPk(challengeId);
+
+            if (!challenge) {
+                res.status(404).json({ message: 'Challenge not found' });
+                return;
+            }
+
+            await UserChallenge.create({
+                userId: user.id,
+                challengeId: challenge.id
+            });
+
+            res.status(200).json({ message: `User ${user.name} joined challenge ${challenge?.name}` });
+        } catch (error: any) {
+            res.status(500).json({ message: error.message });
+        }
+    }
+
+    async leaveChallenge(req: Request, res: Response) {
+        const { challengeId } = req.params;
+
+        const token = getToken(req);
+
+        if (!token) {
+            res.status(401).json({ message: 'No token found' });
+            return;
+        }
+
+        const user = await getUserByToken(token);
+
+        if (!user) {
+            res.status(401).json({ message: 'No user found' });
+            return;
+        }
+
+        try {
+            const challenge = await Challenge.findByPk(challengeId);
+
+            if (!challenge) {
+                res.status(404).json({ message: 'User is not part of this challenge' });
+                return;
+            }
+
+            await UserChallenge.destroy({
+                where: {
+                    userId: user.id,
+                    challengeId
+                }
+            });
+
+            res.status(200).json({ message: `User ${user.name} left challenge ${challenge.name}` });
         } catch (error: any) {
             res.status(500).json({ message: error.message });
         }

@@ -13,6 +13,11 @@ router.get('/:workspaceId', checkToken, workspaceController.getById.bind(workspa
 router.patch('/:workspaceId', checkToken, checkOwnership, imageUpload.single('image'), workspaceController.update.bind(workspaceController));
 router.delete('/:workspaceId', checkToken, checkOwnership, workspaceController.delete.bind(workspaceController));
 
+router.get('/:workspaceId/members', checkToken, workspaceController.getMembers.bind(workspaceController));
+
+router.post('/:workspaceId/join', checkToken, workspaceController.joinWorkspace.bind(workspaceController));
+router.post('/:workspaceId/leave', checkToken, workspaceController.leaveWorkspace.bind(workspaceController));
+
 router.use('/:workspaceId/challenges', challengeRoutes);
 
 export default router;

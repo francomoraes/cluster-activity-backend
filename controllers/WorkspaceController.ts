@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import { appController } from './appController';
 import getToken from '../helpers/get-token';
 import getUserByToken from '../helpers/get-user-by-token';
-import { User } from '../models';
+import { User, UserWorkspace } from '../models';
 
 export class WorkspaceController extends appController {
     getEntity() {
@@ -63,6 +63,11 @@ export class WorkspaceController extends appController {
                 image: null
             });
 
+            await UserWorkspace.create({
+                userId: user.id,
+                workspaceId: newWorkspace.id
+            });
+
             res.status(201).json(newWorkspace);
         } catch (error: any) {
             res.status(500).json({ message: error.message });
@@ -90,9 +95,49 @@ export class WorkspaceController extends appController {
                     ownerId: user.id
                 }
             });
-            console.log('workspaces', workspaces);
 
             res.status(200).json(workspaces);
+        } catch (error: any) {
+            res.status(500).json({ message: error.message });
+        }
+    }
+
+    async getMembers(req: Request, res: Response) {
+        const { workspaceId } = req.params;
+
+        try {
+            const workspace = await Workspace.findByPk(workspaceId);
+
+            if (!workspace) {
+                res.status(404).json({
+                    message: 'Workspace not found'
+                });
+                return;
+            }
+
+            const users = await UserWorkspace.findAll({
+                where: {
+                    workspaceId: workspace.id
+                }
+            });
+
+            if (users.length === 0) {
+                res.status(404).json({
+                    message: 'No members found'
+                });
+                return;
+            }
+
+            const userIds = users.map((user) => user.userId);
+
+            const members = await User.findAll({
+                where: {
+                    id: userIds
+                },
+                attributes: { exclude: ['password'] }
+            });
+
+            res.status(200).json(members);
         } catch (error: any) {
             res.status(500).json({ message: error.message });
         }
@@ -166,6 +211,80 @@ export class WorkspaceController extends appController {
             await workspace.destroy();
 
             res.status(204).json({ message: 'Workspace deleted successfully' });
+        } catch (error: any) {
+            res.status(500).json({ message: error.message });
+        }
+    }
+
+    async joinWorkspace(req: Request, res: Response) {
+        const { workspaceId } = req.params;
+
+        const token = getToken(req);
+
+        if (!token) {
+            res.status(401).json({ message: 'No token found' });
+            return;
+        }
+
+        const user = await getUserByToken(token);
+
+        if (!user) {
+            res.status(401).json({ message: 'No user found' });
+            return;
+        }
+
+        try {
+            const workspace = await Workspace.findByPk(workspaceId);
+
+            if (!workspace) {
+                res.status(404).json({ message: 'Workspace not found' });
+                return;
+            }
+
+            await UserWorkspace.create({
+                userId: user.id,
+                workspaceId: workspace.id
+            });
+
+            res.status(200).json({ message: `User ${user.name} joined workspace ${workspace.name} successfully` });
+        } catch (error: any) {
+            res.status(500).json({ message: error.message });
+        }
+    }
+
+    async leaveWorkspace(req: Request, res: Response) {
+        const { workspaceId } = req.params;
+
+        const token = getToken(req);
+
+        if (!token) {
+            res.status(401).json({ message: 'No token found' });
+            return;
+        }
+
+        const user = await getUserByToken(token);
+
+        if (!user) {
+            res.status(401).json({ message: 'No user found' });
+            return;
+        }
+
+        try {
+            const workspace = await Workspace.findByPk(workspaceId);
+
+            if (!workspace) {
+                res.status(404).json({ message: 'Workspace not found' });
+                return;
+            }
+
+            await UserWorkspace.destroy({
+                where: {
+                    userId: user.id,
+                    workspaceId: workspace.id
+                }
+            });
+
+            res.status(200).json({ message: `User ${user.name} left workspace ${workspace.name} successfully` });
         } catch (error: any) {
             res.status(500).json({ message: error.message });
         }

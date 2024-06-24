@@ -12,4 +12,9 @@ router.get('/:challengeId', checkToken, challengeController.getById.bind(challen
 router.patch('/:challengeId', checkToken, checkOwnership, imageUpload.single('image'), challengeController.update.bind(challengeController));
 router.delete('/:challengeId', checkToken, checkOwnership, challengeController.delete.bind(challengeController));
 
+router.get('/:challengeId/participants', checkToken, challengeController.getParticipants.bind(challengeController));
+
+router.post('/:challengeId/join', checkToken, challengeController.joinChallenge.bind(challengeController));
+router.post('/:challengeId/leave', checkToken, challengeController.leaveChallenge.bind(challengeController));
+
 export default router;
