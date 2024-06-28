@@ -194,6 +194,17 @@ export class UserController {
             return res.status(404).json({ message: 'User not found' });
         }
 
+        // check if user is the same as the one making the request
+        const token = getToken(req);
+
+        if (!token) return res.status(401).json({ message: 'No token provided' });
+
+        const currentUser = await getUserByToken(token);
+
+        if (!currentUser) return res.status(401).json({ message: 'Invalid token' });
+
+        if (currentUser.id !== user.id) return res.status(401).json({ message: 'You can only delete your own account' });
+
         await User.destroy({ where: { id } });
 
         res.status(200).json({ message: `User ${user.name} deleted successfully` });
