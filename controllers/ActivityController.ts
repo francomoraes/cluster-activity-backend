@@ -43,7 +43,7 @@ export class ActivityController extends appController {
             }
 
             const newActivity = await Activity.create({
-                userId: user.id,
+                ownerId: user.id,
                 challengeId,
                 title,
                 description,
@@ -54,6 +54,81 @@ export class ActivityController extends appController {
             });
 
             res.status(201).json({ message: `Activity ${newActivity.title} created successfully`, newActivity });
+        } catch (error: any) {
+            res.status(500).json({ message: error.message });
+        }
+    }
+
+    async getAllByChallenge(req: Request, res: Response) {
+        const { challengeId } = req.params;
+
+        try {
+            const activities = await Activity.findAll({
+                where: { challengeId }
+            });
+
+            res.status(200).json(activities);
+        } catch (error: any) {
+            res.status(500).json({ message: error.message });
+        }
+    }
+
+    async getById(req: Request, res: Response) {
+        const { activityId } = req.params;
+
+        try {
+            const activity = await Activity.findByPk(activityId);
+
+            if (!activity) {
+                res.status(404).json({ message: 'Activity not found' });
+                return;
+            }
+
+            res.status(200).json(activity);
+        } catch (error: any) {
+            res.status(500).json({ message: error.message });
+        }
+    }
+
+    async update(req: Request, res: Response) {
+        const { activityId } = req.params;
+        const { ...rest } = req.body;
+
+        const image = req?.file?.filename;
+
+        try {
+            const activity = await Activity.findByPk(activityId);
+
+            if (!activity) {
+                res.status(404).json({ message: 'Activity not found' });
+                return;
+            }
+
+            const updatedActivity = await activity.update({
+                image: image || activity.image,
+                ...rest
+            });
+
+            res.status(200).json({ message: `Activity ${updatedActivity.title} updated successfully`, updatedActivity });
+        } catch (error: any) {
+            res.status(500).json({ message: error.message });
+        }
+    }
+
+    async delete(req: Request, res: Response) {
+        const { activityId } = req.params;
+
+        try {
+            const activity = await Activity.findByPk(activityId);
+
+            if (!activity) {
+                res.status(404).json({ message: 'Activity not found' });
+                return;
+            }
+
+            await activity.destroy();
+
+            res.status(200).json({ message: 'Activity deleted successfully' });
         } catch (error: any) {
             res.status(500).json({ message: error.message });
         }

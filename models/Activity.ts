@@ -44,7 +44,7 @@ class Activity extends Model {
         type: DataType.UUID,
         allowNull: false
     })
-    userId!: string;
+    ownerId!: string;
 
     @ForeignKey(() => Challenge)
     @Column({

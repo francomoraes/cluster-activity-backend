@@ -2,43 +2,59 @@ import { Request, Response, NextFunction } from 'express';
 import getToken from '../helpers/get-token';
 import getUserByToken from '../helpers/get-user-by-token';
 import { Workspace } from '../models/Workspace';
+import { Challenge } from '../models/Challenge';
+import { Activity } from '../models/Activity';
 
 interface CustomRequest extends Request {
     user?: any;
-    workspace?: any;
+    entity?: any;
 }
 
-const checkOwnership = async (req: CustomRequest, res: Response, next: NextFunction) => {
-    const token = getToken(req);
+const checkOwnership = (entityType: 'workspace' | 'challenge' | 'activity', entityIdParam: string) => {
+    return async (req: CustomRequest, res: Response, next: NextFunction) => {
+        const token = getToken(req);
 
-    if (!token) {
-        return res.status(401).json({ message: 'Unauthorized' });
-    }
+        if (!token) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
 
-    const user = await getUserByToken(token);
+        const user = await getUserByToken(token);
 
-    if (!user) {
-        return res.status(401).json({ message: 'Unauthorized' });
-    }
+        if (!user) {
+            return res.status(401).json({ message: 'Unauthorized' });
+        }
 
-    // Assuming you pass workspaceId through req.params
-    const workspace = await Workspace.findByPk(req.params.workspaceId);
+        let entity;
+        switch (entityType) {
+            case 'workspace':
+                entity = await Workspace.findByPk(req.params[entityIdParam]);
+                break;
+            case 'challenge':
+                entity = await Challenge.findByPk(req.params[entityIdParam]);
+                break;
+            case 'activity':
+                entity = await Activity.findByPk(req.params[entityIdParam]);
+                break;
+            default:
+                return res.status(400).json({ message: 'Invalid entity type' });
+        }
 
-    if (!workspace) {
-        return res.status(404).json({ message: 'Workspace not found' });
-    }
+        if (!entity) {
+            return res.status(404).json({ message: `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} not found` });
+        }
 
-    if (user.id !== workspace.ownerId) {
-        return res.status(403).json({
-            message: 'You are not authorized to edit this workspace. Please reach out to the owner.'
-        });
-    }
+        if (user.id !== entity.ownerId) {
+            return res.status(403).json({
+                message: `You are not authorized to edit this ${entityType}. Please reach out to the owner.`
+            });
+        }
 
-    // Attach user and workspace to req for further use in next middleware or controller
-    req.user = user;
-    req.workspace = workspace;
+        // Attach user and entity to req for further use in next middleware or controller
+        req.user = user;
+        req.entity = entity;
 
-    next();
+        next();
+    };
 };
 
 export default checkOwnership;

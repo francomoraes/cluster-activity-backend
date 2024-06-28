@@ -10,8 +10,8 @@ const workspaceController = new WorkspaceController();
 router.post('/', checkToken, workspaceController.create.bind(workspaceController));
 router.get('/', checkToken, workspaceController.getAllByUser.bind(workspaceController));
 router.get('/:workspaceId', checkToken, workspaceController.getById.bind(workspaceController));
-router.patch('/:workspaceId', checkToken, checkOwnership, imageUpload.single('image'), workspaceController.update.bind(workspaceController));
-router.delete('/:workspaceId', checkToken, checkOwnership, workspaceController.delete.bind(workspaceController));
+router.patch('/:workspaceId', checkToken, checkOwnership('workspace', 'workspaceId'), imageUpload.single('image'), workspaceController.update.bind(workspaceController));
+router.delete('/:workspaceId', checkToken, checkOwnership('workspace', 'workspaceId'), workspaceController.delete.bind(workspaceController));
 
 router.get('/:workspaceId/members', checkToken, workspaceController.getMembers.bind(workspaceController));
 
