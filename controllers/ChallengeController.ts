@@ -205,6 +205,19 @@ export class ChallengeController extends appController {
                 return;
             }
 
+            // check if user is already part of the challenge
+            const isParticipant = await UserChallenge.findOne({
+                where: {
+                    userId: user.id,
+                    challengeId
+                }
+            });
+
+            if (isParticipant) {
+                res.status(400).json({ message: 'User is already part of this challenge' });
+                return;
+            }
+
             await UserChallenge.create({
                 userId: user.id,
                 challengeId: challenge.id
@@ -238,6 +251,19 @@ export class ChallengeController extends appController {
 
             if (!challenge) {
                 res.status(404).json({ message: 'User is not part of this challenge' });
+                return;
+            }
+
+            // check if user is already part of the challenge
+            const isParticipant = await UserChallenge.findOne({
+                where: {
+                    userId: user.id,
+                    challengeId
+                }
+            });
+
+            if (!isParticipant) {
+                res.status(400).json({ message: 'User is not part of this challenge' });
                 return;
             }
 

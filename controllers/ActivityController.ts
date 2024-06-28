@@ -13,7 +13,9 @@ export class ActivityController extends appController {
 
     async create(req: Request, res: Response) {
         const { challengeId } = req.params;
-        const { title, description, type, duration, image, ...rest } = req.body;
+        const { title, description, type, duration, ...rest } = req.body;
+
+        const image = req?.file?.filename;
 
         let missingFields = [];
         if (!title) missingFields.push('title');
@@ -41,12 +43,13 @@ export class ActivityController extends appController {
             }
 
             const newActivity = await Activity.create({
+                userId: user.id,
                 challengeId,
                 title,
                 description,
                 type,
                 duration,
-                image: req.file ? req.file.filename : null,
+                image,
                 ...rest
             });
 

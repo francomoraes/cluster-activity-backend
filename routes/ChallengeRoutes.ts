@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { ChallengeController } from '../controllers/ChallengeController';
+import activityRoutes from './ActivityRoutes';
 import { checkOwnership, checkToken, imageUpload } from '../helpers';
 
 // middleware
@@ -16,5 +17,7 @@ router.get('/:challengeId/participants', checkToken, challengeController.getPart
 
 router.post('/:challengeId/join', checkToken, challengeController.joinChallenge.bind(challengeController));
 router.post('/:challengeId/leave', checkToken, challengeController.leaveChallenge.bind(challengeController));
+
+router.use('/:challengeId/activities', activityRoutes);
 
 export default router;

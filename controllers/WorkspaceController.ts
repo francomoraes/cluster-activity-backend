@@ -241,6 +241,19 @@ export class WorkspaceController extends appController {
                 return;
             }
 
+            // check if user isn't already a member
+            const isMember = await UserWorkspace.findOne({
+                where: {
+                    userId: user.id,
+                    workspaceId: workspace.id
+                }
+            });
+
+            if (isMember) {
+                res.status(400).json({ message: 'User is already a member of this workspace' });
+                return;
+            }
+
             await UserWorkspace.create({
                 userId: user.id,
                 workspaceId: workspace.id
@@ -274,6 +287,19 @@ export class WorkspaceController extends appController {
 
             if (!workspace) {
                 res.status(404).json({ message: 'Workspace not found' });
+                return;
+            }
+
+            // check if user is a member
+            const isMember = await UserWorkspace.findOne({
+                where: {
+                    userId: user.id,
+                    workspaceId: workspace.id
+                }
+            });
+
+            if (!isMember) {
+                res.status(400).json({ message: 'User is not a member of this workspace' });
                 return;
             }
 
