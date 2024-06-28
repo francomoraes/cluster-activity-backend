@@ -11,6 +11,6 @@ router.post('/', checkToken, imageUpload.single('image'), activityController.cre
 router.get('/', checkToken, activityController.getAllByChallenge.bind(activityController));
 router.get('/:activityId', checkToken, activityController.getById.bind(activityController));
 router.patch('/:activityId', checkToken, checkOwnership('activity', 'activityId'), imageUpload.single('image'), activityController.update.bind(activityController));
-router.delete('/:activityId', checkToken, checkOwnership('activity', 'activityId'), activityController.delete.bind(activityController));
+router.delete('/:activityId', checkToken, checkOwnership('activity', 'activityId', ['owner', 'admin']), activityController.delete.bind(activityController));
 
 export default router;
