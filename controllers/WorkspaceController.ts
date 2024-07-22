@@ -74,6 +74,16 @@ export class WorkspaceController extends appController {
         }
     }
 
+    async getAll(req: Request, res: Response) {
+        try {
+            const workspaces = await Workspace.findAll();
+
+            res.status(200).json(workspaces);
+        } catch (error: any) {
+            res.status(500).json({ message: error.message });
+        }
+    }
+
     async getAllByUser(req: Request, res: Response) {
         try {
             const token = getToken(req);
@@ -90,13 +100,46 @@ export class WorkspaceController extends appController {
                 return;
             }
 
-            const workspaces = await Workspace.findAll({
+            const ownedWorkspaces = await Workspace.findAll({
                 where: {
                     ownerId: user.id
                 }
             });
 
-            res.status(200).json(workspaces);
+            const joinedWorkspacesIds = await UserWorkspace.findAll({
+                where: {
+                    userId: user.id
+                }
+            });
+
+            const joinedMinusOwned = joinedWorkspacesIds.filter(
+                (workspace) => !ownedWorkspaces.map((w) => w.id).includes(workspace.workspaceId)
+            );
+
+            const joinedWorkspaces = await Workspace.findAll({
+                where: {
+                    id: joinedMinusOwned.map((w) => w.workspaceId)
+                }
+            });
+
+            if (ownedWorkspaces.length === 0 && joinedWorkspaces.length === 0) {
+                res.status(404).json({
+                    message: 'No workspaces found'
+                });
+                return;
+            }
+
+            if (ownedWorkspaces.length === 0 && joinedWorkspaces.length > 0) {
+                res.status(200).json({ ownedWorkspaces: 'No owned workspaces', joinedWorkspaces });
+                return;
+            }
+
+            if (ownedWorkspaces.length > 0 && joinedWorkspaces.length === 0) {
+                res.status(200).json({ ownedWorkspaces, joinedWorkspaces: 'No joined workspaces' });
+                return;
+            }
+
+            res.status(200).json({ ownedWorkspaces, joinedWorkspaces });
         } catch (error: any) {
             res.status(500).json({ message: error.message });
         }
@@ -259,7 +302,9 @@ export class WorkspaceController extends appController {
                 workspaceId: workspace.id
             });
 
-            res.status(200).json({ message: `User ${user.name} joined workspace ${workspace.name} successfully` });
+            res.status(200).json({
+                message: `User ${user.name} joined workspace ${workspace.name} successfully`
+            });
         } catch (error: any) {
             res.status(500).json({ message: error.message });
         }
@@ -290,6 +335,12 @@ export class WorkspaceController extends appController {
                 return;
             }
 
+            // check if user is owner
+            if (workspace.ownerId === user.id) {
+                res.status(400).json({ message: 'Owner cannot leave workspace' });
+                return;
+            }
+
             // check if user is a member
             const isMember = await UserWorkspace.findOne({
                 where: {
@@ -310,7 +361,9 @@ export class WorkspaceController extends appController {
                 }
             });
 
-            res.status(200).json({ message: `User ${user.name} left workspace ${workspace.name} successfully` });
+            res.status(200).json({
+                message: `User ${user.name} left workspace ${workspace.name} successfully`
+            });
         } catch (error: any) {
             res.status(500).json({ message: error.message });
         }
