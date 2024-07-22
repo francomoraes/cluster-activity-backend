@@ -1,4 +1,13 @@
-import { Model, Column, Table, PrimaryKey, DataType, Default, HasMany, BelongsToMany } from 'sequelize-typescript';
+import {
+    Model,
+    Column,
+    Table,
+    PrimaryKey,
+    DataType,
+    Default,
+    HasMany,
+    BelongsToMany
+} from 'sequelize-typescript';
 import { Workspace } from './Workspace';
 import { Challenge } from './Challenge';
 import { UserWorkspace } from './UserWorkspace';
@@ -28,7 +37,13 @@ class User extends Model {
 
     @Column({
         type: DataType.STRING,
-        allowNull: false
+        allowNull: true
+    })
+    googleId?: string;
+
+    @Column({
+        type: DataType.STRING,
+        allowNull: true
     })
     password!: string;
 

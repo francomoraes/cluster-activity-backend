@@ -3,6 +3,8 @@ import cors from 'cors';
 import db from './db/db';
 import UserRoutes from './routes/UserRoutes';
 import WorkspaceRoutes from './routes/WorkspaceRoutes';
+import authRouter from './routes/oauth';
+import requestRouter from './routes/request';
 
 const app = express();
 
@@ -17,10 +19,12 @@ app.use(express.static('public'));
 
 app.use('/users', UserRoutes);
 app.use('/workspaces', WorkspaceRoutes);
+app.use('/auth/google', authRouter);
+app.use('/request', requestRouter);
 
 db
     // .sync({ force: true })
-    //     .then(() => {
+    // .then(() => {
     .sync()
     .then(() => {
         app.listen(5000, () => {

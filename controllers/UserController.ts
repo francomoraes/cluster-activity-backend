@@ -17,7 +17,9 @@ export class UserController {
         // validations
         if (!name || !email || !password || !confirmpassword) {
             res.status(422).json({
-                message: `Missing fields: ${!name ? 'name, ' : ''}${!email ? 'email, ' : ''}${!password ? 'password, ' : ''}${!confirmpassword ? 'confirmpassword' : ''}`
+                message: `Missing fields: ${!name ? 'name, ' : ''}${!email ? 'email, ' : ''}${
+                    !password ? 'password, ' : ''
+                }${!confirmpassword ? 'confirmpassword' : ''}`
             });
             return;
         }
@@ -203,7 +205,8 @@ export class UserController {
 
         if (!currentUser) return res.status(401).json({ message: 'Invalid token' });
 
-        if (currentUser.id !== user.id) return res.status(401).json({ message: 'You can only delete your own account' });
+        if (currentUser.id !== user.id)
+            return res.status(401).json({ message: 'You can only delete your own account' });
 
         await User.destroy({ where: { id } });
 
