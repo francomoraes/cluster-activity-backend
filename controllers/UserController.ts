@@ -52,7 +52,7 @@ export class UserController {
                 verificationCode
             });
 
-            // sendVerificationEmail(newUser.email, verificationCode);
+            sendVerificationEmail(newUser.email, verificationCode);
 
             const token = createUserToken(newUser, req, res);
 

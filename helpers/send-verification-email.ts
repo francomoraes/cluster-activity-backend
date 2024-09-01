@@ -14,7 +14,7 @@ export const sendVerificationEmail = (email: string, token: string) => {
         to: email,
         subject: 'Verify Your Email',
         text: `Please verify your email by clicking on the following link: 
-        ${process.env.BASE_URL}verify-email?token=${token}`
+        ${process.env.BASE_URL}users/verify-email?token=${token}`
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
