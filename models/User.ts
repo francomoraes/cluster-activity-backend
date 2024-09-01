@@ -21,7 +21,7 @@ class User extends Model {
     @PrimaryKey
     @Default(DataType.UUIDV4)
     @Column(DataType.UUID)
-    id!: number;
+    id!: string;
 
     @Column({
         type: DataType.STRING,
@@ -52,6 +52,18 @@ class User extends Model {
         allowNull: true
     })
     avatar?: string | null;
+
+    @Column({
+        type: DataType.BOOLEAN,
+        defaultValue: false
+    })
+    isVerified!: boolean;
+
+    @Column({
+        type: DataType.STRING,
+        allowNull: true
+    })
+    verificationCode?: string;
 
     @HasMany(() => Workspace)
     ownedWorkspaces!: Workspace[];

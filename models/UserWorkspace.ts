@@ -11,14 +11,14 @@ class UserWorkspace extends Model {
         type: DataType.UUID,
         allowNull: false
     })
-    userId!: number;
+    userId!: string;
 
     @ForeignKey(() => Workspace)
     @Column({
         type: DataType.UUID,
         allowNull: false
     })
-    workspaceId!: number;
+    workspaceId!: string;
 }
 
 export { UserWorkspace };

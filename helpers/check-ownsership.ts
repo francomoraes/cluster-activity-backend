@@ -10,7 +10,11 @@ interface CustomRequest extends Request {
     entity?: any;
 }
 
-const checkOwnership = (entityType: 'workspace' | 'challenge' | 'activity', entityIdParam: string, roles: ('owner' | 'admin')[] = ['owner']) => {
+const checkOwnership = (
+    entityType: 'workspace' | 'challenge' | 'activity',
+    entityIdParam: string,
+    roles: ('owner' | 'admin')[] = ['owner']
+) => {
     return async (req: CustomRequest, res: Response, next: NextFunction) => {
         const token = getToken(req);
 
@@ -40,12 +44,17 @@ const checkOwnership = (entityType: 'workspace' | 'challenge' | 'activity', enti
         }
 
         if (!entity) {
-            return res.status(404).json({ message: `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} not found` });
+            return res
+                .status(404)
+                .json({
+                    message: `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} not found`
+                });
         }
 
         // Check ownership or admin role
         const isOwner = user.id === entity.ownerId;
-        const isAdmin = roles.includes('admin') && (await checkIfAdmin(user.id, entityType, entity));
+        const isAdmin =
+            roles.includes('admin') && (await checkIfAdmin(user.id, entityType, entity));
 
         if (!isOwner && !isAdmin) {
             return res.status(403).json({
@@ -60,7 +69,11 @@ const checkOwnership = (entityType: 'workspace' | 'challenge' | 'activity', enti
     };
 };
 
-const checkIfAdmin = async (userId: number, entityType: 'workspace' | 'challenge' | 'activity', entity: any) => {
+const checkIfAdmin = async (
+    userId: string,
+    entityType: 'workspace' | 'challenge' | 'activity',
+    entity: any
+) => {
     switch (entityType) {
         case 'workspace':
             // Implement your logic to check if the user is an admin of the workspace

@@ -11,6 +11,7 @@ router.post('/login', UserController.login);
 router.get('/checkuser', UserController.checkUser);
 router.get('/all', UserController.getAllUsers);
 router.patch('/edit/:id', checkToken, imageUpload.single('avatar'), UserController.editUser);
+router.get('/verify-email', UserController.verifyEmail);
 router.get('/:id', UserController.getUserById);
 router.delete('/:id', checkToken, UserController.deleteUser);
 

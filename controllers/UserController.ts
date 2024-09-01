@@ -5,6 +5,7 @@ import { User } from '../models/User';
 import createUserToken from '../helpers/create-user-token';
 import getToken from '../helpers/get-token';
 import getUserByToken from '../helpers/get-user-by-token';
+import { sendVerificationEmail } from '../helpers/send-verification-email';
 
 export interface MyToken extends JwtPayload {
     id?: string;
@@ -38,15 +39,34 @@ export class UserController {
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
 
+        // create verification code
+        const verificationCode = Math.random().toString(36).substring(7) || '';
+
         try {
             const newUser = await User.create({
                 name,
                 email,
                 password: passwordHash,
-                avatar: null
+                avatar: null,
+                isVerified: false,
+                verificationCode
             });
 
-            createUserToken(newUser, req, res);
+            // sendVerificationEmail(newUser.email, verificationCode);
+
+            const token = createUserToken(newUser, req, res);
+
+            res.status(200).json({
+                message: 'User registered.',
+                user: {
+                    id: newUser.id,
+                    name: newUser.name,
+                    email: newUser.email,
+                    avatar: newUser.avatar,
+                    verificationCode
+                },
+                token
+            });
         } catch (error: any) {
             res.status(500).json({ message: error.message });
         }
@@ -71,7 +91,18 @@ export class UserController {
             return res.status(400).json({ message: 'Invalid password' });
         }
 
-        createUserToken(user, req, res);
+        const token = createUserToken(user, req, res);
+
+        res.status(200).json({
+            message: 'User authenticated.',
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                avatar: user.avatar
+            },
+            token
+        });
     }
 
     static async checkUser(req: Request, res: Response) {
@@ -211,5 +242,21 @@ export class UserController {
         await User.destroy({ where: { id } });
 
         res.status(200).json({ message: `User ${user.name} deleted successfully` });
+    }
+
+    static async verifyEmail(req: Request, res: Response) {
+        const { token: verificationCode } = req.query;
+
+        const user = await User.findOne({ where: { verificationCode } });
+
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        user.isVerified = true;
+        user.verificationCode = '';
+        await user.save();
+
+        res.status(200).json({ message: 'User verified successfully' });
     }
 }

@@ -1,4 +1,14 @@
-import { Model, Column, Table, PrimaryKey, DataType, Default, ForeignKey, BelongsToMany, HasMany } from 'sequelize-typescript';
+import {
+    Model,
+    Column,
+    Table,
+    PrimaryKey,
+    DataType,
+    Default,
+    ForeignKey,
+    BelongsToMany,
+    HasMany
+} from 'sequelize-typescript';
 import { User } from './User';
 import { UserWorkspace } from './UserWorkspace';
 import { Challenge } from './Challenge';
@@ -11,7 +21,7 @@ class Workspace extends Model {
     @PrimaryKey
     @Default(DataType.UUIDV4)
     @Column(DataType.UUID)
-    id!: number;
+    id!: string;
 
     @Column({
         type: DataType.STRING,
@@ -30,7 +40,7 @@ class Workspace extends Model {
         type: DataType.UUID,
         allowNull: false
     })
-    ownerId!: number;
+    ownerId!: string;
 
     @Column({
         type: DataType.BOOLEAN,
