@@ -10,17 +10,30 @@ export abstract class appController {
         this.model = entity.model;
     }
 
+    // Abstract method that child controllers must implement
     abstract getEntity(): { name: string; model: any };
+
+    // Pre-create hook for child classes to override
+    protected async beforeCreate(data: any, req: Request): Promise<any> {
+        return data;
+    }
+
+    // Post-create hook for child classes to override
+    protected async afterCreate(entity: any, req: Request): Promise<any> {
+        return entity;
+    }
 
     getIncludes(): any[] {
         return [];
     }
 
     async create(req: Request, res: Response) {
-        const data = req.body;
+        let data = req.body;
 
         try {
+            data = await this.beforeCreate(data, req); // Custom behavior before creation
             const newEntity = await this.model.create(data);
+            await this.afterCreate(newEntity, req); // Custom behavior after creation
 
             res.status(201).json(newEntity);
         } catch (error: any) {
