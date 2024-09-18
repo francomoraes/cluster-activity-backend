@@ -2,7 +2,7 @@ import { Challenge } from '../models/Challenge';
 import { Request, Response } from 'express';
 import { appController } from './appController';
 import { getToken, getUserByToken } from '../helpers';
-import { User, UserChallenge } from '../models';
+import { User, UserChallenge, Workspace } from '../models';
 
 export class ChallengeController extends appController {
     getEntity() {
@@ -17,6 +17,18 @@ export class ChallengeController extends appController {
         const { name, description, startDate, endDate, ...rest } = req.body;
 
         // validations
+        if (!workspaceId) {
+            res.status(422).json({ message: 'Missing workspaceId' });
+            return;
+        }
+
+        const workspace = await Workspace.findByPk(workspaceId);
+
+        if (!workspace) {
+            res.status(404).json({ message: 'Workspace not found' });
+            return;
+        }
+
         let missingFields = [];
         if (!name) missingFields.push('name');
         if (!description) missingFields.push('description');
@@ -223,7 +235,9 @@ export class ChallengeController extends appController {
                 challengeId: challenge.id
             });
 
-            res.status(200).json({ message: `User ${user.name} joined challenge ${challenge?.name}` });
+            res.status(200).json({
+                message: `User ${user.name} joined challenge ${challenge?.name}`
+            });
         } catch (error: any) {
             res.status(500).json({ message: error.message });
         }
