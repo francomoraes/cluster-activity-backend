@@ -88,17 +88,8 @@ export class ChallengeController extends appController {
     async getParticipants(req: Request, res: Response) {
         const { workspaceId, challengeId } = req.params;
 
-        if (!workspaceId) {
-            res.status(422).json({ message: 'Missing workspaceId' });
-            return;
-        }
-
-        const workspace = await Workspace.findByPk(workspaceId);
-
-        if (!workspace) {
-            res.status(404).json({ message: 'Workspace not found' });
-            return;
-        }
+        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
+        if (!workspace) return;
 
         try {
             const challenge = await Challenge.findByPk(challengeId);
