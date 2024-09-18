@@ -50,8 +50,15 @@ export abstract class appController {
         }
     }
 
-    async getById(req: Request, res: Response) {
-        const { id } = req.params;
+    async getById(req: Request, res: Response, idParamName: string): Promise<void> {
+        const id = req.params[idParamName];
+
+        if (!id) {
+            res.status(400).json({
+                message: 'Missing id parameter'
+            });
+            return;
+        }
 
         try {
             const entity = await this.model.findByPk(id);
@@ -69,8 +76,8 @@ export abstract class appController {
         }
     }
 
-    async update(req: Request, res: Response) {
-        const { id } = req.params;
+    async update(req: Request, res: Response, idParamName: string): Promise<void> {
+        const id = req.params[idParamName];
         const data = req.body;
 
         try {
@@ -95,8 +102,8 @@ export abstract class appController {
         }
     }
 
-    async delete(req: Request, res: Response) {
-        const { id } = req.params;
+    async delete(req: Request, res: Response, idParamName: string): Promise<void> {
+        const id = req.params[idParamName];
 
         try {
             const entity = await this.model.findByPk(id);
