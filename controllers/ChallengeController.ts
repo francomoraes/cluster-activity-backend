@@ -1,9 +1,14 @@
-import { Challenge } from '../models/Challenge';
 import { Request, Response } from 'express';
+
+import { User, UserChallenge, Workspace, Challenge } from '../models';
+
 import { appController } from './appController';
+
 import { getToken, getUserByToken } from '../helpers';
-import { User, UserChallenge, Workspace } from '../models';
 import { validateEntity } from '../helpers/validate-entity';
+import { getMembers } from '../helpers/get-members';
+import { joinEntity } from '../helpers/join-entity';
+import { leaveEntity } from '../helpers/leave-entity';
 
 export class ChallengeController extends appController {
     getEntity() {
@@ -13,61 +18,59 @@ export class ChallengeController extends appController {
         };
     }
 
-    async create(req: Request, res: Response) {
-        const { workspaceId } = req.params;
-        const { name, description, startDate, endDate, ...rest } = req.body;
+    getIncludes() {
+        return [
+            {
+                model: User,
+                as: 'owner',
+                attributes: ['id', 'name', 'email']
+            }
+        ];
+    }
 
-        // validations
-        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
-        if (!workspace) return;
+    // Specific pre-create behavior
+    protected async beforeCreate(data: any, req: Request) {
+        const token = getToken(req);
+        if (!token) throw new Error('No token found');
 
-        let missingFields = [];
-        if (!name) missingFields.push('name');
-        if (!description) missingFields.push('description');
+        const user = await getUserByToken(token);
+        if (!user) throw new Error('No user found');
 
-        if (missingFields.length > 0) {
-            res.status(422).json({
-                message: `Missing fields: ${missingFields.join(', ')}`
-            });
-            return;
+        return { ...data, ownerId: user.id, isActive: true };
+    }
+
+    // Specific post-create behavior
+    protected async afterCreate(workspace: any, req: Request) {
+        const token = getToken(req);
+
+        if (!token) {
+            throw new Error('No token found');
         }
 
-        try {
-            const token = getToken(req);
+        const user = await getUserByToken(token);
 
-            if (!token) {
-                res.status(401).json({ message: 'No token found' });
-                return;
-            }
-
-            const user = await getUserByToken(token);
-
-            if (!user) {
-                res.status(401).json({ message: 'No user found' });
-                return;
-            }
-
-            const newChallenge = await Challenge.create({
-                workspaceId,
-                name,
-                description,
-                startDate,
-                endDate,
-                ownerId: user.id,
-                isActive: true,
-                ...rest
-            });
-
-            await UserChallenge.create({
-                userId: user.id,
-                challengeId: newChallenge.id
-            });
-
-            res.status(201).json(newChallenge);
-        } catch (error: any) {
-            console.log('error', error);
-            res.status(500).json({ message: error.message });
+        if (!user) {
+            throw new Error('No user found');
         }
+
+        // Create relation with user
+        await UserChallenge.create({
+            userId: user.id,
+            workspaceId: workspace.id
+        });
+        return workspace;
+    }
+
+    async update(req: Request, res: Response): Promise<void> {
+        return super.update(req, res, 'challengeId');
+    }
+
+    async delete(req: Request, res: Response): Promise<void> {
+        return super.delete(req, res, 'challengeId');
+    }
+
+    async getById(req: Request, res: Response): Promise<void> {
+        return super.getById(req, res, 'challengeId');
     }
 
     async getAllByWorkspace(req: Request, res: Response) {
@@ -91,111 +94,7 @@ export class ChallengeController extends appController {
         const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
         if (!workspace) return;
 
-        try {
-            const challenge = await Challenge.findByPk(challengeId);
-
-            if (!challenge) {
-                res.status(404).json({ message: 'Challenge not found' });
-                return;
-            }
-
-            const users = await UserChallenge.findAll({
-                where: {
-                    challengeId: challenge.id
-                }
-            });
-
-            if (users.length === 0) {
-                res.status(404).json({ message: 'No participants found' });
-                return;
-            }
-
-            const userIds = users.map((user) => user.userId);
-
-            const participants = await User.findAll({
-                where: {
-                    id: userIds
-                },
-                attributes: { exclude: ['password'] }
-            });
-
-            res.status(200).json(participants);
-        } catch (error: any) {
-            res.status(500).json({ message: error.message });
-        }
-    }
-
-    async getById(req: Request, res: Response) {
-        const { workspaceId, challengeId } = req.params;
-
-        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
-        if (!workspace) return;
-
-        try {
-            const entity = await this.model.findByPk(challengeId);
-
-            if (!entity) {
-                res.status(404).json({
-                    message: `${this.name} not found`
-                });
-                return;
-            }
-
-            res.status(200).json(entity);
-        } catch (error: any) {
-            res.status(500).json({ message: error.message });
-        }
-    }
-
-    async update(req: Request, res: Response) {
-        const { workspaceId, challengeId } = req.params;
-        const data = req.body;
-
-        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
-        if (!workspace) return;
-
-        try {
-            const entity = await this.model.findByPk(challengeId);
-
-            if (!entity) {
-                res.status(404).json({
-                    message: `${this.name} not found`
-                });
-                return;
-            }
-
-            if (req.file) {
-                data.image = req.file.filename;
-            }
-
-            await entity.update(data);
-
-            res.status(200).json(entity);
-        } catch (error: any) {
-            res.status(500).json({ message: error.message });
-        }
-    }
-
-    async delete(req: Request, res: Response) {
-        const { workspaceId, challengeId } = req.params;
-
-        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
-        if (!workspace) return;
-
-        try {
-            const challenge = await Challenge.findByPk(challengeId);
-
-            if (!challenge) {
-                res.status(404).json({ message: 'Challenge not found' });
-                return;
-            }
-
-            await challenge.destroy();
-
-            res.status(200).json({ message: 'Challenge deleted successfully' });
-        } catch (error: any) {
-            res.status(500).json({ message: error.message });
-        }
+        return getMembers(req, res, Challenge, UserChallenge, challengeId, 'challengeId');
     }
 
     async joinChallenge(req: Request, res: Response) {
@@ -204,52 +103,7 @@ export class ChallengeController extends appController {
         const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
         if (!workspace) return;
 
-        const token = getToken(req);
-
-        if (!token) {
-            res.status(401).json({ message: 'No token found' });
-            return;
-        }
-
-        const user = await getUserByToken(token);
-
-        if (!user) {
-            res.status(401).json({ message: 'No user found' });
-            return;
-        }
-
-        try {
-            const challenge = await Challenge.findByPk(challengeId);
-
-            if (!challenge) {
-                res.status(404).json({ message: 'Challenge not found' });
-                return;
-            }
-
-            // check if user is already part of the challenge
-            const isParticipant = await UserChallenge.findOne({
-                where: {
-                    userId: user.id,
-                    challengeId
-                }
-            });
-
-            if (isParticipant) {
-                res.status(400).json({ message: 'User is already part of this challenge' });
-                return;
-            }
-
-            await UserChallenge.create({
-                userId: user.id,
-                challengeId: challenge.id
-            });
-
-            res.status(200).json({
-                message: `User ${user.name} joined challenge ${challenge?.name}`
-            });
-        } catch (error: any) {
-            res.status(500).json({ message: error.message });
-        }
+        return joinEntity(req, res, Challenge, UserChallenge, challengeId, 'challengeId');
     }
 
     async leaveChallenge(req: Request, res: Response) {
@@ -258,51 +112,6 @@ export class ChallengeController extends appController {
         const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
         if (!workspace) return;
 
-        const token = getToken(req);
-
-        if (!token) {
-            res.status(401).json({ message: 'No token found' });
-            return;
-        }
-
-        const user = await getUserByToken(token);
-
-        if (!user) {
-            res.status(401).json({ message: 'No user found' });
-            return;
-        }
-
-        try {
-            const challenge = await Challenge.findByPk(challengeId);
-
-            if (!challenge) {
-                res.status(404).json({ message: 'User is not part of this challenge' });
-                return;
-            }
-
-            // check if user is already part of the challenge
-            const isParticipant = await UserChallenge.findOne({
-                where: {
-                    userId: user.id,
-                    challengeId
-                }
-            });
-
-            if (!isParticipant) {
-                res.status(400).json({ message: 'User is not part of this challenge' });
-                return;
-            }
-
-            await UserChallenge.destroy({
-                where: {
-                    userId: user.id,
-                    challengeId
-                }
-            });
-
-            res.status(200).json({ message: `User ${user.name} left challenge ${challenge.name}` });
-        } catch (error: any) {
-            res.status(500).json({ message: error.message });
-        }
+        return leaveEntity(req, res, Challenge, UserChallenge, challengeId, 'challengeId');
     }
 }
