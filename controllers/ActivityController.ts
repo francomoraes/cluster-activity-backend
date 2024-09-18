@@ -1,7 +1,8 @@
-import { Activity } from '../models';
+import { Activity, Challenge, Workspace } from '../models';
 import { appController } from './appController';
 import { Request, Response } from 'express';
 import { getToken, getUserByToken } from '../helpers';
+import { validateEntity } from '../helpers/validate-entity';
 
 export class ActivityController extends appController {
     getEntity() {
@@ -12,8 +13,14 @@ export class ActivityController extends appController {
     }
 
     async create(req: Request, res: Response) {
-        const { challengeId } = req.params;
+        const { workspaceId, challengeId } = req.params;
         const { title, description, type, duration, ...rest } = req.body;
+
+        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
+        if (!workspace) return;
+
+        const challenge = await validateEntity(Challenge, challengeId, 'Challenge', res);
+        if (!challenge) return;
 
         const image = req?.file?.filename;
 
@@ -53,7 +60,10 @@ export class ActivityController extends appController {
                 ...rest
             });
 
-            res.status(201).json({ message: `Activity ${newActivity.title} created successfully`, newActivity });
+            res.status(201).json({
+                message: `Activity ${newActivity.title} created successfully`,
+                newActivity
+            });
         } catch (error: any) {
             res.status(500).json({ message: error.message });
         }
@@ -109,7 +119,10 @@ export class ActivityController extends appController {
                 ...rest
             });
 
-            res.status(200).json({ message: `Activity ${updatedActivity.title} updated successfully`, updatedActivity });
+            res.status(200).json({
+                message: `Activity ${updatedActivity.title} updated successfully`,
+                updatedActivity
+            });
         } catch (error: any) {
             res.status(500).json({ message: error.message });
         }

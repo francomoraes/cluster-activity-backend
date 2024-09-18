@@ -3,6 +3,7 @@ import { Request, Response } from 'express';
 import { appController } from './appController';
 import { getToken, getUserByToken } from '../helpers';
 import { User, UserChallenge, Workspace } from '../models';
+import { validateEntity } from '../helpers/validate-entity';
 
 export class ChallengeController extends appController {
     getEntity() {
@@ -17,17 +18,8 @@ export class ChallengeController extends appController {
         const { name, description, startDate, endDate, ...rest } = req.body;
 
         // validations
-        if (!workspaceId) {
-            res.status(422).json({ message: 'Missing workspaceId' });
-            return;
-        }
-
-        const workspace = await Workspace.findByPk(workspaceId);
-
-        if (!workspace) {
-            res.status(404).json({ message: 'Workspace not found' });
-            return;
-        }
+        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
+        if (!workspace) return;
 
         let missingFields = [];
         if (!name) missingFields.push('name');
@@ -80,17 +72,8 @@ export class ChallengeController extends appController {
 
     async getAllByWorkspace(req: Request, res: Response) {
         const { workspaceId } = req.params;
-        if (!workspaceId) {
-            res.status(422).json({ message: 'Missing workspaceId' });
-            return;
-        }
-
-        const workspace = await Workspace.findByPk(workspaceId);
-
-        if (!workspace) {
-            res.status(404).json({ message: 'Workspace not found' });
-            return;
-        }
+        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
+        if (!workspace) return;
 
         try {
             const challenges = await Challenge.findAll({
@@ -154,17 +137,8 @@ export class ChallengeController extends appController {
     async getById(req: Request, res: Response) {
         const { workspaceId, challengeId } = req.params;
 
-        if (!workspaceId) {
-            res.status(422).json({ message: 'Missing workspaceId' });
-            return;
-        }
-
-        const workspace = await Workspace.findByPk(workspaceId);
-
-        if (!workspace) {
-            res.status(404).json({ message: 'Workspace not found' });
-            return;
-        }
+        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
+        if (!workspace) return;
 
         try {
             const entity = await this.model.findByPk(challengeId);
@@ -186,17 +160,8 @@ export class ChallengeController extends appController {
         const { workspaceId, challengeId } = req.params;
         const data = req.body;
 
-        if (!workspaceId) {
-            res.status(422).json({ message: 'Missing workspaceId' });
-            return;
-        }
-
-        const workspace = await Workspace.findByPk(workspaceId);
-
-        if (!workspace) {
-            res.status(404).json({ message: 'Workspace not found' });
-            return;
-        }
+        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
+        if (!workspace) return;
 
         try {
             const entity = await this.model.findByPk(challengeId);
@@ -223,17 +188,8 @@ export class ChallengeController extends appController {
     async delete(req: Request, res: Response) {
         const { workspaceId, challengeId } = req.params;
 
-        if (!workspaceId) {
-            res.status(422).json({ message: 'Missing workspaceId' });
-            return;
-        }
-
-        const workspace = await Workspace.findByPk(workspaceId);
-
-        if (!workspace) {
-            res.status(404).json({ message: 'Workspace not found' });
-            return;
-        }
+        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
+        if (!workspace) return;
 
         try {
             const challenge = await Challenge.findByPk(challengeId);
@@ -254,17 +210,8 @@ export class ChallengeController extends appController {
     async joinChallenge(req: Request, res: Response) {
         const { workspaceId, challengeId } = req.params;
 
-        if (!workspaceId) {
-            res.status(422).json({ message: 'Missing workspaceId' });
-            return;
-        }
-
-        const workspace = await Workspace.findByPk(workspaceId);
-
-        if (!workspace) {
-            res.status(404).json({ message: 'Workspace not found' });
-            return;
-        }
+        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
+        if (!workspace) return;
 
         const token = getToken(req);
 
@@ -317,17 +264,8 @@ export class ChallengeController extends appController {
     async leaveChallenge(req: Request, res: Response) {
         const { workspaceId, challengeId } = req.params;
 
-        if (!workspaceId) {
-            res.status(422).json({ message: 'Missing workspaceId' });
-            return;
-        }
-
-        const workspace = await Workspace.findByPk(workspaceId);
-
-        if (!workspace) {
-            res.status(404).json({ message: 'Workspace not found' });
-            return;
-        }
+        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
+        if (!workspace) return;
 
         const token = getToken(req);
 
