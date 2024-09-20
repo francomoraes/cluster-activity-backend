@@ -6,12 +6,20 @@ import createUserToken from '../helpers/create-user-token';
 import getToken from '../helpers/get-token';
 import getUserByToken from '../helpers/get-user-by-token';
 import { sendVerificationEmail } from '../helpers/send-verification-email';
+import { appController } from './appController';
 
 export interface MyToken extends JwtPayload {
     id?: string;
 }
 
-export class UserController {
+export class UserController extends appController {
+    getEntity() {
+        return {
+            name: 'User',
+            model: User
+        };
+    }
+
     static async register(req: Request, res: Response) {
         const { name, email, password, confirmpassword } = req.body;
 
@@ -105,52 +113,27 @@ export class UserController {
         });
     }
 
-    static async checkUser(req: Request, res: Response) {
-        let currentUser;
+    static async verifyEmail(req: Request, res: Response) {
+        const { token: verificationCode } = req.query;
 
-        if (req.headers.authorization) {
-            const token = getToken(req);
-
-            if (!token) {
-                return res.status(401).json({ message: 'No token provided' });
-            }
-
-            if (!process.env.JWT_SECRET) {
-                throw new Error('JWT_SECRET not defined');
-            }
-
-            let decoded: any = jwt.verify(token, process.env.JWT_SECRET);
-
-            if (typeof decoded === 'object' && decoded && 'id' in decoded) {
-                decoded = decoded as MyToken; // Now safely cast since we checked
-
-                currentUser = await User.findByPk(decoded.id, {
-                    attributes: { exclude: ['password'] }
-                });
-            } else {
-                throw new Error('Invalid token format');
-            }
-        } else {
-            currentUser = null;
-        }
-        res.status(200).json({ user: currentUser });
-    }
-
-    static async getUserById(req: Request, res: Response) {
-        const { id } = req.params;
-
-        const user = await User.findByPk(id, {
-            attributes: { exclude: ['password'] }
-        });
+        const user = await User.findOne({ where: { verificationCode } });
 
         if (!user) {
-            return res.status(422).json({ message: 'User not found' });
+            return res.status(404).json({ message: 'User not found' });
         }
 
-        res.status(200).json({ user });
+        user.isVerified = true;
+        user.verificationCode = '';
+        await user.save();
+
+        res.status(200).json({ message: 'User verified successfully' });
     }
 
-    static async editUser(req: Request, res: Response) {
+    async getUserById(req: Request, res: Response): Promise<void> {
+        return super.getById(req, res, 'id');
+    }
+
+    async editUser(req: Request, res: Response) {
         const { id } = req.params;
         const token = getToken(req);
 
@@ -210,53 +193,42 @@ export class UserController {
         }
     }
 
-    static async getAllUsers(req: Request, res: Response) {
-        const users = await User.findAll({
-            attributes: { exclude: ['password'] }
-        });
-
-        return res.status(200).json({ users });
+    async deleteUser(req: Request, res: Response) {
+        return super.delete(req, res, 'id');
     }
 
-    static async deleteUser(req: Request, res: Response) {
-        const { id } = req.params;
-
-        const user = await User.findByPk(id);
-
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
-        }
-
-        // check if user is the same as the one making the request
-        const token = getToken(req);
-
-        if (!token) return res.status(401).json({ message: 'No token provided' });
-
-        const currentUser = await getUserByToken(token);
-
-        if (!currentUser) return res.status(401).json({ message: 'Invalid token' });
-
-        if (currentUser.id !== user.id)
-            return res.status(401).json({ message: 'You can only delete your own account' });
-
-        await User.destroy({ where: { id } });
-
-        res.status(200).json({ message: `User ${user.name} deleted successfully` });
+    async getAllUsers(req: Request, res: Response) {
+        return super.getAll(req, res);
     }
 
-    static async verifyEmail(req: Request, res: Response) {
-        const { token: verificationCode } = req.query;
+    static async checkUser(req: Request, res: Response) {
+        let currentUser;
 
-        const user = await User.findOne({ where: { verificationCode } });
+        if (req.headers.authorization) {
+            const token = getToken(req);
 
-        if (!user) {
-            return res.status(404).json({ message: 'User not found' });
+            if (!token) {
+                return res.status(401).json({ message: 'No token provided' });
+            }
+
+            if (!process.env.JWT_SECRET) {
+                throw new Error('JWT_SECRET not defined');
+            }
+
+            let decoded: any = jwt.verify(token, process.env.JWT_SECRET);
+
+            if (typeof decoded === 'object' && decoded && 'id' in decoded) {
+                decoded = decoded as MyToken; // Now safely cast since we checked
+
+                currentUser = await User.findByPk(decoded.id, {
+                    attributes: { exclude: ['password'] }
+                });
+            } else {
+                throw new Error('Invalid token format');
+            }
+        } else {
+            currentUser = null;
         }
-
-        user.isVerified = true;
-        user.verificationCode = '';
-        await user.save();
-
-        res.status(200).json({ message: 'User verified successfully' });
+        res.status(200).json({ user: currentUser });
     }
 }
