@@ -1,4 +1,4 @@
-import { Activity, Challenge, Workspace } from '../models';
+import { Activity, Challenge, User, Workspace } from '../models';
 import { appController } from './appController';
 import { Request, Response } from 'express';
 import { getToken, getUserByToken } from '../helpers';
@@ -12,92 +12,53 @@ export class ActivityController extends appController {
         };
     }
 
-    async create(req: Request, res: Response) {
+    protected async beforeCreate(data: any, req: Request) {
+        const { title, description, type, duration, ...rest } = data;
         const { workspaceId, challengeId } = req.params;
-        const { title, description, type, duration, ...rest } = req.body;
+        const missingFields: string[] = [];
 
-        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
-        if (!workspace) return;
-
-        const challenge = await validateEntity(Challenge, challengeId, 'Challenge', res);
-        if (!challenge) return;
-
-        const image = req?.file?.filename;
-
-        let missingFields = [];
         if (!title) missingFields.push('title');
-        if (!image) missingFields.push('image');
         if (!type) missingFields.push('type');
+        if (!workspaceId) missingFields.push('workspaceId');
+        if (!challengeId) missingFields.push('challengeId');
 
         if (missingFields.length > 0) {
-            res.status(400).json({ message: `Missing fields: ${missingFields.join(', ')}` });
-            return;
+            throw new Error(`Missing fields: ${missingFields.join(', ')}`);
         }
 
-        try {
-            const token = getToken(req);
+        if (!req.res) throw new Error('Response object not found');
 
-            if (!token) {
-                res.status(401).json({ message: 'Unauthorized' });
-                return;
-            }
+        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', req.res);
+        if (!workspace) throw new Error('Workspace not found');
 
-            const user = await getUserByToken(token);
+        const challenge = await validateEntity(Challenge, challengeId, 'Challenge', req.res);
+        if (!challenge) throw new Error('Challenge not found');
 
-            if (!user) {
-                res.status(401).json({ message: 'Unauthorized' });
-                return;
-            }
+        const token = getToken(req);
+        if (!token) throw new Error('No token found');
 
-            const newActivity = await Activity.create({
-                ownerId: user.id,
-                challengeId,
-                title,
-                description,
-                type,
-                duration,
-                image,
-                ...rest
-            });
+        const user = await getUserByToken(token);
+        if (!user) throw new Error('No user found');
 
-            res.status(201).json({
-                message: `Activity ${newActivity.title} created successfully`,
-                newActivity
-            });
-        } catch (error: any) {
-            res.status(500).json({ message: error.message });
+        const activityData = {
+            ...rest,
+            title,
+            description,
+            type,
+            duration,
+            ownerId: user.id,
+            challengeId
+        };
+
+        if (req?.file?.filename) {
+            activityData.image = req.file.filename;
         }
+
+        return activityData;
     }
 
-    async getAllByChallenge(req: Request, res: Response) {
-        const { challengeId } = req.params;
-
-        try {
-            const activities = await Activity.findAll({
-                where: { challengeId }
-            });
-
-            res.status(200).json(activities);
-        } catch (error: any) {
-            res.status(500).json({ message: error.message });
-        }
-    }
-
-    async getById(req: Request, res: Response) {
-        const { activityId } = req.params;
-
-        try {
-            const activity = await Activity.findByPk(activityId);
-
-            if (!activity) {
-                res.status(404).json({ message: 'Activity not found' });
-                return;
-            }
-
-            res.status(200).json(activity);
-        } catch (error: any) {
-            res.status(500).json({ message: error.message });
-        }
+    protected async afterCreate(activity: any, _req: Request): Promise<any> {
+        return activity;
     }
 
     async update(req: Request, res: Response) {
@@ -128,22 +89,25 @@ export class ActivityController extends appController {
         }
     }
 
-    async delete(req: Request, res: Response) {
-        const { activityId } = req.params;
+    async getAllByChallenge(req: Request, res: Response) {
+        const { challengeId } = req.params;
 
         try {
-            const activity = await Activity.findByPk(activityId);
+            const activities = await Activity.findAll({
+                where: { challengeId }
+            });
 
-            if (!activity) {
-                res.status(404).json({ message: 'Activity not found' });
-                return;
-            }
-
-            await activity.destroy();
-
-            res.status(200).json({ message: 'Activity deleted successfully' });
+            res.status(200).json(activities);
         } catch (error: any) {
             res.status(500).json({ message: error.message });
         }
+    }
+
+    async getById(req: Request, res: Response) {
+        super.getById(req, res, 'activityId');
+    }
+
+    async delete(req: Request, res: Response) {
+        super.delete(req, res, 'activityId');
     }
 }

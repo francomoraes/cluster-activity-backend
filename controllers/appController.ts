@@ -105,6 +105,13 @@ export abstract class appController {
     async delete(req: Request, res: Response, idParamName: string): Promise<void> {
         const id = req.params[idParamName];
 
+        if (!id) {
+            res.status(400).json({
+                message: 'Missing id parameter'
+            });
+            return;
+        }
+
         try {
             const entity = await this.model.findByPk(id);
 
