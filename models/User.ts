@@ -1,84 +1,42 @@
-import {
-    Model,
-    Column,
-    Table,
-    PrimaryKey,
-    DataType,
-    Default,
-    HasMany,
-    BelongsToMany
-} from 'sequelize-typescript';
-import { Workspace } from './Workspace';
-import { Challenge } from './Challenge';
-import { UserWorkspace } from './UserWorkspace';
-import { UserChallenge } from './UserChallenge';
-import { Activity } from './Activity';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 
-@Table({
-    tableName: 'users'
+@Entity({
+    name: 'users'
 })
-class User extends Model {
-    @PrimaryKey
-    @Default(DataType.UUIDV4)
-    @Column(DataType.UUID)
+class User {
+    @PrimaryGeneratedColumn('uuid')
     id!: string;
 
-    @Column({
-        type: DataType.STRING,
-        allowNull: false
-    })
+    @Column()
     name!: string;
 
-    @Column({
-        type: DataType.STRING,
-        allowNull: false
-    })
+    @Column()
     email!: string;
 
     @Column({
-        type: DataType.STRING,
-        allowNull: true
+        nullable: true
     })
     googleId?: string;
 
     @Column({
-        type: DataType.STRING,
-        allowNull: true
+        nullable: true
     })
     password!: string;
 
     @Column({
-        type: DataType.STRING,
-        allowNull: true
+        nullable: true
     })
     avatar?: string | null;
 
     @Column({
-        type: DataType.BOOLEAN,
-        defaultValue: false
+        default: false
     })
     isVerified!: boolean;
 
     @Column({
-        type: DataType.STRING,
-        allowNull: true
+        nullable: true
     })
     verificationCode?: string;
-
-    @HasMany(() => Workspace)
-    ownedWorkspaces!: Workspace[];
-
-    @BelongsToMany(() => Workspace, () => UserWorkspace)
-    joinedWorkspaces!: Workspace[];
-
-    @HasMany(() => Challenge)
-    createdChallenges!: Challenge[];
-
-    @BelongsToMany(() => Challenge, () => UserChallenge)
-    joinedChallenges!: Challenge[];
-
-    @HasMany(() => Activity)
-    activities!: Activity[];
 }
 
 export { User };

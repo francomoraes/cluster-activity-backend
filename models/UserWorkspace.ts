@@ -1,24 +1,18 @@
-import { Column, DataType, ForeignKey, Model, Table } from 'sequelize-typescript';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './User';
 import { Workspace } from './Workspace';
 
-@Table({
-    tableName: 'user_workspaces'
+@Entity({
+    name: 'user_workspaces'
 })
-class UserWorkspace extends Model {
-    @ForeignKey(() => User)
-    @Column({
-        type: DataType.UUID,
-        allowNull: false
-    })
-    userId!: string;
+class UserWorkspace {
+    @ManyToOne(() => User)
+    @JoinColumn({ name: 'userId' })
+    user!: User;
 
-    @ForeignKey(() => Workspace)
-    @Column({
-        type: DataType.UUID,
-        allowNull: false
-    })
-    workspaceId!: string;
+    @ManyToOne(() => Workspace)
+    @JoinColumn({ name: 'workspaceId' })
+    workspace!: Workspace;
 }
 
 export { UserWorkspace };

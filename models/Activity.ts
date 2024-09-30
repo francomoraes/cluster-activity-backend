@@ -1,62 +1,35 @@
-import { BelongsTo, Column, DataType, Default, ForeignKey, Model, PrimaryKey, Table } from 'sequelize-typescript';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './User';
 import { Challenge } from './Challenge';
 
-@Table({
-    tableName: 'activities'
+@Entity({
+    name: 'activities'
 })
-class Activity extends Model {
-    @PrimaryKey
-    @Default(DataType.UUIDV4)
-    @Column(DataType.UUID)
+class Activity {
+    @PrimaryGeneratedColumn('uuid')
     id!: string;
 
-    @Column({
-        allowNull: false,
-        type: DataType.STRING
-    })
+    @Column()
     title!: string;
 
-    @Column({
-        type: DataType.STRING
-    })
+    @Column({ nullable: true })
     description!: string;
 
-    @Column({
-        type: DataType.STRING,
-        allowNull: false
-    })
+    @Column()
     image!: string;
 
-    @Column({
-        type: DataType.STRING,
-        allowNull: false
-    })
+    @Column()
     type!: string;
 
-    @Column({
-        type: DataType.INTEGER
-    })
+    @Column()
     duration!: number;
 
-    @ForeignKey(() => User)
-    @Column({
-        type: DataType.UUID,
-        allowNull: false
-    })
-    ownerId!: string;
-
-    @ForeignKey(() => Challenge)
-    @Column({
-        type: DataType.UUID,
-        allowNull: false
-    })
-    challengeId!: string;
-
-    @BelongsTo(() => User)
+    @ManyToOne(() => User)
+    @JoinColumn({ name: 'ownerId' })
     user!: User;
 
-    @BelongsTo(() => Challenge)
+    @ManyToOne(() => Challenge)
+    @JoinColumn({ name: 'challengeId' })
     challenge!: Challenge;
 }
 

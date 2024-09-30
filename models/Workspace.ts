@@ -1,78 +1,44 @@
-import {
-    Model,
-    Column,
-    Table,
-    PrimaryKey,
-    DataType,
-    Default,
-    ForeignKey,
-    BelongsToMany,
-    HasMany
-} from 'sequelize-typescript';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './User';
-import { UserWorkspace } from './UserWorkspace';
-import { Challenge } from './Challenge';
-//Workspace
 
-@Table({
-    tableName: 'workspaces'
+@Entity({
+    name: 'workspaces'
 })
-class Workspace extends Model {
-    @PrimaryKey
-    @Default(DataType.UUIDV4)
-    @Column(DataType.UUID)
+class Workspace {
+    @PrimaryGeneratedColumn('uuid')
     id!: string;
 
-    @Column({
-        type: DataType.STRING,
-        allowNull: false
-    })
+    @Column()
     name!: string;
 
     @Column({
-        type: DataType.STRING,
-        allowNull: true
+        nullable: true
     })
     description!: string;
 
-    @ForeignKey(() => User)
     @Column({
-        type: DataType.UUID,
-        allowNull: false
-    })
-    ownerId!: string;
-
-    @Column({
-        type: DataType.BOOLEAN,
-        allowNull: false,
-        defaultValue: false
+        default: false
     })
     isPrivate!: boolean;
 
     @Column({
-        type: DataType.BOOLEAN,
-        allowNull: false,
-        defaultValue: true
+        default: true
     })
     isActive!: boolean;
 
     @Column({
-        type: DataType.INTEGER,
-        allowNull: true
+        nullable: true
     })
     memberLimit!: number;
 
     @Column({
-        type: DataType.STRING,
-        allowNull: true
+        nullable: true
     })
     image!: string;
 
-    @BelongsToMany(() => User, () => UserWorkspace)
-    users!: User[];
-
-    @HasMany(() => Challenge, 'workspaceId')
-    challenges!: Challenge[];
+    @ManyToOne(() => User)
+    @JoinColumn({ name: 'ownerId' })
+    user!: User;
 }
 
 export { Workspace };

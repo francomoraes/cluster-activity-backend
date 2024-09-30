@@ -1,10 +1,10 @@
 import express from 'express';
 import cors from 'cors';
-import db from './db/db';
 import UserRoutes from './routes/UserRoutes';
 import WorkspaceRoutes from './routes/WorkspaceRoutes';
 import authRouter from './routes/oauth';
 import requestRouter from './routes/request';
+import AppDataSource from './db/db';
 
 const app = express();
 
@@ -22,15 +22,13 @@ app.use('/workspaces', WorkspaceRoutes);
 app.use('/auth/google', authRouter);
 app.use('/request', requestRouter);
 
-db
-    // .sync({ force: true })
-    // .then(() => {
-    .sync()
+AppDataSource.initialize()
     .then(() => {
+        console.log('Database connected');
         app.listen(5000, () => {
             console.log('Server is running on port 5000');
         });
     })
-    .catch((error: Error) => {
-        console.log('Error: ', error);
+    .catch((error: any) => {
+        console.log('Error connecting to database', error);
     });

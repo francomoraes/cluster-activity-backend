@@ -1,25 +1,18 @@
-// UserChallenge.ts
-import { Model, Column, Table, ForeignKey, DataType } from 'sequelize-typescript';
+import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './User';
 import { Challenge } from './Challenge';
 
-@Table({
-    tableName: 'user_challenges'
+@Entity({
+    name: 'user_challenges'
 })
-class UserChallenge extends Model {
-    @ForeignKey(() => User)
-    @Column({
-        type: DataType.UUID,
-        allowNull: false
-    })
-    userId!: string;
+class UserChallenge {
+    @ManyToOne(() => User)
+    @JoinColumn({ name: 'userId' })
+    user!: User;
 
-    @ForeignKey(() => Challenge)
-    @Column({
-        type: DataType.UUID,
-        allowNull: false
-    })
-    challengeId!: string;
+    @ManyToOne(() => Challenge)
+    @JoinColumn({ name: 'challengeId' })
+    challenge!: Challenge;
 }
 
 export { UserChallenge };

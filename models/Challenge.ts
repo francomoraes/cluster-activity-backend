@@ -1,95 +1,50 @@
-import {
-    Model,
-    Column,
-    Table,
-    PrimaryKey,
-    DataType,
-    Default,
-    ForeignKey,
-    BelongsTo,
-    BelongsToMany,
-    HasMany
-} from 'sequelize-typescript';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { Workspace } from './Workspace';
 import { User } from './User';
-import { UserChallenge } from './UserChallenge';
-import { Activity } from './Activity';
-//Challenge
 
-@Table({
-    tableName: 'challenges'
+@Entity({
+    name: 'challenges'
 })
-class Challenge extends Model {
-    @PrimaryKey
-    @Default(DataType.UUIDV4)
-    @Column(DataType.UUID)
+class Challenge {
+    @PrimaryGeneratedColumn('uuid')
     id!: string;
 
-    @Column({
-        type: DataType.STRING,
-        allowNull: false
-    })
+    @Column()
     name!: string;
 
     @Column({
-        type: DataType.STRING
+        nullable: true
     })
     description!: string;
 
-    @Column({
-        type: DataType.DATE,
-        allowNull: false
-    })
+    @Column()
     startDate!: Date;
 
-    @Column({
-        type: DataType.DATE,
-        allowNull: false
-    })
+    @Column()
     endDate!: Date;
 
-    @ForeignKey(() => User)
     @Column({
-        type: DataType.UUID,
-        allowNull: false
-    })
-    ownerId!: string;
-
-    @Column({
-        type: DataType.BOOLEAN,
-        allowNull: false,
-        defaultValue: true
+        default: true
     })
     isActive!: boolean;
 
     @Column({
-        type: DataType.INTEGER
+        nullable: true
     })
     memberLimit!: number;
 
     @Column({
-        type: DataType.STRING
+        nullable: true
     })
     image!: string;
 
-    @ForeignKey(() => Workspace)
-    @Column({
-        type: DataType.UUID,
-        allowNull: false
-    })
-    workspaceId!: string;
+    @ManyToOne(() => User)
+    @JoinColumn({ name: 'ownerId' })
+    user!: User;
 
-    @BelongsTo(() => Workspace)
+    @ManyToOne(() => Workspace)
+    @JoinColumn({ name: 'ownerId' })
     workspace!: Workspace;
-
-    @BelongsTo(() => User)
-    owner!: User;
-
-    @BelongsToMany(() => User, () => UserChallenge)
-    users!: User[];
-
-    @HasMany(() => Activity)
-    activities!: Activity[];
 }
 
 export { Challenge };
