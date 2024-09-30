@@ -4,11 +4,18 @@ import getUserByToken from '../helpers/get-user-by-token';
 import { Workspace } from '../models/Workspace';
 import { Challenge } from '../models/Challenge';
 import { Activity } from '../models/Activity';
+import AppDataSource from '../db/db';
 
 interface CustomRequest extends Request {
     user?: any;
     entity?: any;
 }
+
+const entityConfig = {
+    workspace: { model: Workspace, ownerRelation: 'user' },
+    challenge: { model: Challenge, ownerRelation: 'user' },
+    activity: { model: Activity, ownerRelation: 'challenge.user' }
+};
 
 const checkOwnership = (
     entityType: 'workspace' | 'challenge' | 'activity',
@@ -28,31 +35,30 @@ const checkOwnership = (
             return res.status(401).json({ message: 'Unauthorized' });
         }
 
-        let entity;
-        switch (entityType) {
-            case 'workspace':
-                entity = await Workspace.findByPk(req.params[entityIdParam]);
-                break;
-            case 'challenge':
-                entity = await Challenge.findByPk(req.params[entityIdParam]);
-                break;
-            case 'activity':
-                entity = await Activity.findByPk(req.params[entityIdParam]);
-                break;
-            default:
-                return res.status(400).json({ message: 'Invalid entity type' });
+        const entityId = req.params[entityIdParam];
+        const entityInfo = entityConfig[entityType];
+
+        if (!entityInfo) {
+            return res.status(400).json({ message: 'Invalid entity type' });
         }
+
+        const entityRepository = AppDataSource.getRepository(entityInfo.model);
+        const entity = await entityRepository.findOne({
+            where: { id: entityId },
+            relations: entityInfo.ownerRelation.split('.')
+        });
 
         if (!entity) {
-            return res
-                .status(404)
-                .json({
-                    message: `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} not found`
-                });
+            return res.status(404).json({
+                message: `${entityType.charAt(0).toUpperCase() + entityType.slice(1)} not found`
+            });
         }
 
-        // Check ownership or admin role
-        const isOwner = user.id === entity.ownerId;
+        const ownerId = entityInfo.ownerRelation
+            .split('.')
+            .reduce((acc: any, curr: string) => acc?.[curr], entity)?.id;
+
+        const isOwner = user.id === ownerId;
         const isAdmin =
             roles.includes('admin') && (await checkIfAdmin(user.id, entityType, entity));
 
@@ -76,15 +82,17 @@ const checkIfAdmin = async (
 ) => {
     switch (entityType) {
         case 'workspace':
-            // Implement your logic to check if the user is an admin of the workspace
+            // Implement logic to check if the user is an admin of the workspace
             break;
         case 'challenge':
-            // Implement your logic to check if the user is an admin of the challenge
+            // Implement logic to check if the user is an admin of the challenge
             break;
         case 'activity':
-            // Check if the user is the owner of the challenge related to the activity
-            const challenge = await Challenge.findByPk(entity.challengeId);
-            return userId === challenge?.ownerId;
+            const challenge = await AppDataSource.getRepository(Challenge).findOne({
+                where: { id: entity.challengeId },
+                relations: ['user']
+            });
+            return userId === challenge?.user.id;
         default:
             return false;
     }

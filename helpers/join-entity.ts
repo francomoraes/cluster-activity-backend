@@ -1,13 +1,13 @@
 import { Request, Response } from 'express';
-import { Model, ModelCtor } from 'sequelize-typescript';
+import { Repository } from 'typeorm';
 import getToken from './get-token';
 import getUserByToken from './get-user-by-token';
 
 export const joinEntity = async (
     req: Request,
     res: Response,
-    entityModel: ModelCtor<Model<any, any>>,
-    userEntityModel: ModelCtor<Model<any, any>>,
+    entityModel: Repository<any>,
+    userEntityModel: Repository<any>,
     entityId: string,
     idParamName: string
 ) => {
@@ -24,36 +24,27 @@ export const joinEntity = async (
             return res.status(401).json({ message: 'No user found' });
         }
 
-        const entity = await entityModel.findByPk(entityId);
+        const entity = await entityModel.findOne({ where: { id: entityId } });
 
         if (!entity) {
-            return res.status(404).json({ message: `${entityModel.name} not found` });
+            return res.status(404).json({ message: `${entityModel.metadata.name} not found` });
         }
 
         const isMember = await userEntityModel.findOne({
-            where: { userId: user.id, [idParamName]: entity.id }
+            where: { user: { id: user.id }, [idParamName]: entity.id }
         });
-
-        console.log('isMember', isMember);
 
         if (isMember) {
             return res.status(400).json({ message: 'User is already a member' });
         }
 
-        console.log('Create Object', {
-            userId: user.id,
-            [idParamName]: entity.id
-        });
-
-        await userEntityModel.create({
-            userId: user.id,
+        await userEntityModel.save({
+            user: { id: user.id },
             [idParamName]: entity.id
         });
 
         return res.status(200).json({
-            message: `User ${user.name} joined ${entityModel.name} ${entity.getDataValue(
-                'name'
-            )} successfully`
+            message: `User ${user.name} joined ${entityModel.metadata.name} ${entity.name} successfully`
         });
     } catch (error: any) {
         return res.status(500).json({ message: error.message });

@@ -1,14 +1,15 @@
 import { Request, Response } from 'express';
-import { Model, ModelCtor } from 'sequelize-typescript';
+import { Repository, In } from 'typeorm';
 import getToken from './get-token';
 import getUserByToken from './get-user-by-token';
-import { User } from '../models';
+import { User } from '../models/User';
+import AppDataSource from '../db/db'; // Import the initialized AppDataSource
 
 export const getMembers = async (
     req: Request,
     res: Response,
-    entityModel: ModelCtor<Model<any, any>>,
-    userEntityModel: ModelCtor<Model<any, any>>,
+    entityModel: Repository<any>, // TypeORM repository for the entity (e.g., Challenge, Workspace)
+    userEntityModel: Repository<any>, // TypeORM repository for the join table (e.g., UserChallenge, UserWorkspace)
     entityId: string,
     idParamName: string
 ) => {
@@ -28,24 +29,26 @@ export const getMembers = async (
         }
 
         // Step 3: Get All UsersIds linked to the Entity
-        const users = await userEntityModel.findAll({
+        const userEntities = await userEntityModel.find({
             where: {
                 [idParamName]: entityId
-            }
+            },
+            relations: ['user'] // Ensure the User relation is loaded if using an object
         });
 
-        if (!users || users.length === 0) {
+        if (!userEntities || userEntities.length === 0) {
             return res.status(404).json({ message: 'No users found' });
         }
 
-        const usersIds = users.map((user: any) => user.userId);
+        // Extract user IDs from the join table
+        const userIds = userEntities.map((userEntity) => userEntity.user.id);
 
         // Step 4: Get All Users
-        const members = await User.findAll({
+        const members = await AppDataSource.getRepository(User).find({
             where: {
-                id: usersIds
+                id: In(userIds)
             },
-            attributes: { exclude: ['password'] }
+            select: ['id', 'name', 'email'] // Exclude sensitive fields like password
         });
 
         // Step 5: Return Members

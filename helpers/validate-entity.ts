@@ -13,7 +13,7 @@ export async function validateEntity(
         return null;
     }
 
-    const entity = await model.findByPk(entityId);
+    const entity = await model.find({ where: { id: entityId } });
 
     if (!entity) {
         res.status(404).json({ message: `${entityName} not found` });

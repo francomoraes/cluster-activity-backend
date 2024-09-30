@@ -1,14 +1,15 @@
 import { Request, Response } from 'express';
+import { Repository, In } from 'typeorm';
 import getToken from './get-token';
 import getUserByToken from './get-user-by-token';
-import { Model, ModelCtor, ModelStatic } from 'sequelize-typescript';
 
 export const getAllByUser = async (
     req: Request,
     res: Response,
-    entityModel: ModelCtor<Model<any, any>>,
-    userEntityModel: ModelCtor<Model<any, any>>,
-    userIdField: string
+    entityModel: Repository<any>,
+    userEntityModel: Repository<any>,
+    userIdField: string,
+    entityIdField: string
 ) => {
     try {
         const token = getToken(req);
@@ -23,18 +24,18 @@ export const getAllByUser = async (
             return res.status(401).json({ message: 'No user found' });
         }
 
-        const ownedEntities = await entityModel.findAll({
+        const ownedEntities = await entityModel.find({
             where: { [userIdField]: user.id }
         });
 
-        const joinedEntitiesIds = await userEntityModel.findAll({
-            where: { userId: user.id }
+        const joinedEntityRelations = await userEntityModel.find({
+            where: { user: { id: user.id } }
         });
 
-        const joinedEntities = await entityModel.findAll({
-            where: {
-                id: joinedEntitiesIds.map((rel) => rel[`${entityModel.name}Id` as keyof typeof rel]) // Fix here
-            }
+        const joinedEntityIds = joinedEntityRelations.map((rel: any) => rel[entityIdField]);
+
+        const joinedEntities = await entityModel.find({
+            where: { id: In(joinedEntityIds) }
         });
 
         return res.status(200).json({

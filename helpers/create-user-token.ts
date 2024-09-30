@@ -14,17 +14,6 @@ const createUserToken = (user: User, req: Request, res: Response) => {
         expiresIn: '24h'
     });
 
-    // res.status(200).json({
-    //     message: 'User authenticated.',
-    //     user: {
-    //         id: user.id,
-    //         name: user.name,
-    //         email: user.email,
-    //         avatar: user.avatar
-    //     },
-    //     token
-    // });
-
     return token;
 };
 
