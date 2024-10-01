@@ -7,12 +7,13 @@ import { joinEntity } from '../helpers/join-entity';
 import { leaveEntity } from '../helpers/leave-entity';
 import getToken from '../helpers/get-token';
 import getUserByToken from '../helpers/get-user-by-token';
+import AppDataSource from '../db/db';
 
 export class WorkspaceController extends appController {
     getEntity() {
         return {
             name: 'Workspace',
-            model: Workspace
+            model: AppDataSource.getRepository(Workspace)
         };
     }
 
@@ -72,10 +73,13 @@ export class WorkspaceController extends appController {
         if (!user) throw new Error('No user found');
 
         // Create UserWorkspace association
-        await UserWorkspace.create({
-            userId: user.id,
-            workspaceId: workspace.id
+        const userWorkspaceRepository = AppDataSource.getRepository(UserWorkspace);
+        const userWorkspace = userWorkspaceRepository.create({
+            user,
+            workspace
         });
+
+        await userWorkspaceRepository.save(userWorkspace);
 
         return workspace;
     }
@@ -86,7 +90,10 @@ export class WorkspaceController extends appController {
         const data = req.body;
 
         try {
-            const workspace = await this.model.findByPk(workspaceId);
+            const workspaceRepository = AppDataSource.getRepository(UserWorkspace);
+            const workspace = await workspaceRepository.findOne({
+                where: { workspace: { id: workspaceId } }
+            });
             if (!workspace) {
                 res.status(404).json({ message: 'Workspace not found' });
                 return;
@@ -97,7 +104,9 @@ export class WorkspaceController extends appController {
                 data.image = req.file.filename;
             }
 
-            await workspace.update(data);
+            workspaceRepository.merge(workspace, data);
+            await workspaceRepository.save(workspace);
+
             res.status(200).json({ message: 'Workspace updated successfully', workspace });
         } catch (error: any) {
             res.status(500).json({ message: error.message });
@@ -114,21 +123,49 @@ export class WorkspaceController extends appController {
     }
 
     async getAllByUser(req: Request, res: Response) {
-        return getAllByUser(req, res, Workspace, UserWorkspace, 'ownerId');
+        return getAllByUser(
+            req,
+            res,
+            AppDataSource.getRepository(Workspace),
+            AppDataSource.getRepository(UserWorkspace),
+            'ownerId',
+            'workspaceId'
+        );
     }
 
     async joinWorkspace(req: Request, res: Response) {
         const { workspaceId } = req.params;
-        return joinEntity(req, res, Workspace, UserWorkspace, workspaceId, 'workspaceId');
+        return joinEntity(
+            req,
+            res,
+            AppDataSource.getRepository(Workspace),
+            AppDataSource.getRepository(UserWorkspace),
+            workspaceId,
+            'workspaceId'
+        );
     }
 
     async leaveWorkspace(req: Request, res: Response) {
         const { workspaceId } = req.params;
-        return leaveEntity(req, res, Workspace, UserWorkspace, workspaceId, 'workspaceId');
+        return leaveEntity(
+            req,
+            res,
+            AppDataSource.getRepository(Workspace),
+            AppDataSource.getRepository(UserWorkspace),
+            workspaceId,
+            'workspaceId'
+        );
     }
 
     async getMembers(req: Request, res: Response) {
         const { workspaceId } = req.params;
-        return getMembers(req, res, Workspace, UserWorkspace, workspaceId, 'workspaceId');
+        return getMembers(
+            req,
+            res,
+            AppDataSource.getRepository(Workspace),
+            AppDataSource.getRepository(UserWorkspace),
+            workspaceId,
+            'workspaceId'
+        );
     }
 }

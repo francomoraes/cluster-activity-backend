@@ -3,12 +3,13 @@ import { appController } from './appController';
 import { Request, Response } from 'express';
 import { getToken, getUserByToken } from '../helpers';
 import { validateEntity } from '../helpers/validate-entity';
+import AppDataSource from '../db/db';
 
 export class ActivityController extends appController {
     getEntity() {
         return {
             name: 'Activity',
-            model: Activity
+            model: AppDataSource.getRepository(Activity)
         };
     }
 
@@ -64,21 +65,19 @@ export class ActivityController extends appController {
     async update(req: Request, res: Response) {
         const { activityId } = req.params;
         const { ...rest } = req.body;
-
         const image = req?.file?.filename;
 
         try {
-            const activity = await Activity.findByPk(activityId);
+            const activityRepository = AppDataSource.getRepository(Activity);
+            const activity = await activityRepository.findOne({ where: { id: activityId } });
 
             if (!activity) {
                 res.status(404).json({ message: 'Activity not found' });
                 return;
             }
 
-            const updatedActivity = await activity.update({
-                image: image || activity.image,
-                ...rest
-            });
+            activityRepository.merge(activity, { image: activity.image }, ...rest);
+            const updatedActivity = await activityRepository.save(activity);
 
             res.status(200).json({
                 message: `Activity ${updatedActivity.title} updated successfully`,
@@ -93,8 +92,9 @@ export class ActivityController extends appController {
         const { challengeId } = req.params;
 
         try {
-            const activities = await Activity.findAll({
-                where: { challengeId }
+            const activityRepository = AppDataSource.getRepository(Activity);
+            const activities = await activityRepository.find({
+                where: { challenge: { id: challengeId } }
             });
 
             res.status(200).json(activities);

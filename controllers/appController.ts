@@ -1,8 +1,9 @@
 import { Request, Response } from 'express';
+import { Repository } from 'typeorm';
 
 export abstract class appController {
     name: string;
-    model: any;
+    model: Repository<any>;
 
     constructor() {
         const entity = this.getEntity();
@@ -10,15 +11,12 @@ export abstract class appController {
         this.model = entity.model;
     }
 
-    // Abstract method that child controllers must implement
     abstract getEntity(): { name: string; model: any };
 
-    // Pre-create hook for child classes to override
     protected async beforeCreate(data: any, req: Request): Promise<any> {
         return data;
     }
 
-    // Post-create hook for child classes to override
     protected async afterCreate(entity: any, req: Request): Promise<any> {
         return entity;
     }
@@ -31,9 +29,10 @@ export abstract class appController {
         let data = req.body;
 
         try {
-            data = await this.beforeCreate(data, req); // Custom behavior before creation
+            data = await this.beforeCreate(data, req);
             const newEntity = await this.model.create(data);
-            await this.afterCreate(newEntity, req); // Custom behavior after creation
+            await this.model.save(newEntity);
+            await this.afterCreate(newEntity, req);
 
             res.status(201).json(newEntity);
         } catch (error: any) {
@@ -43,7 +42,7 @@ export abstract class appController {
 
     async getAll(req: Request, res: Response) {
         try {
-            const items = await this.model.findAll();
+            const items = await this.model.find();
             res.json(items);
         } catch (error: unknown) {
             res.status(500).json({ message: (error as Error).message });
@@ -61,7 +60,7 @@ export abstract class appController {
         }
 
         try {
-            const entity = await this.model.findByPk(id);
+            const entity = await this.model.findOne({ where: { id } });
 
             if (!entity) {
                 res.status(404).json({
@@ -81,7 +80,7 @@ export abstract class appController {
         const data = req.body;
 
         try {
-            const entity = await this.model.findByPk(id);
+            const entity = await this.model.findOne({ where: { id } });
 
             if (!entity) {
                 res.status(404).json({
@@ -94,7 +93,8 @@ export abstract class appController {
                 data.image = req.file.filename;
             }
 
-            await entity.update(data);
+            this.model.merge(entity, data);
+            await this.model.save(entity);
 
             res.status(200).json(entity);
         } catch (error: any) {
@@ -113,7 +113,7 @@ export abstract class appController {
         }
 
         try {
-            const entity = await this.model.findByPk(id);
+            const entity = await this.model.findOne({ where: { id } });
 
             if (!entity) {
                 res.status(404).json({
@@ -122,7 +122,7 @@ export abstract class appController {
                 return;
             }
 
-            await entity.destroy();
+            await this.model.remove(entity);
 
             res.status(200).json({
                 message: `${this.name} deleted successfully`

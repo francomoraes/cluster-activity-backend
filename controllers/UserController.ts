@@ -7,6 +7,7 @@ import getToken from '../helpers/get-token';
 import getUserByToken from '../helpers/get-user-by-token';
 import { sendVerificationEmail } from '../helpers/send-verification-email';
 import { appController } from './appController';
+import AppDataSource from '../db/db';
 
 export interface MyToken extends JwtPayload {
     id?: string;
@@ -16,7 +17,7 @@ export class UserController extends appController {
     getEntity() {
         return {
             name: 'User',
-            model: User
+            model: AppDataSource.getRepository(User)
         };
     }
 
@@ -37,7 +38,8 @@ export class UserController extends appController {
             return res.status(400).json({ message: 'Passwords do not match' });
         }
 
-        const checkIfUserExists = await User.findOne({ where: { email } });
+        const userRepository = AppDataSource.getRepository(User);
+        const checkIfUserExists = await userRepository.findOne({ where: { email } });
 
         if (checkIfUserExists) {
             return res.status(400).json({ message: 'User already exists' });
@@ -51,7 +53,7 @@ export class UserController extends appController {
         const verificationCode = Math.random().toString(36).substring(7) || '';
 
         try {
-            const newUser = await User.create({
+            const newUser = userRepository.create({
                 name,
                 email,
                 password: passwordHash,
@@ -59,6 +61,8 @@ export class UserController extends appController {
                 isVerified: false,
                 verificationCode
             });
+
+            await userRepository.save(newUser);
 
             sendVerificationEmail(newUser.email, verificationCode);
 
@@ -87,7 +91,8 @@ export class UserController extends appController {
             return res.status(422).json({ message: 'All fields are required' });
         }
 
-        const user = await User.findOne({ where: { email } });
+        const userRepository = AppDataSource.getRepository(User);
+        const user = await userRepository.findOne({ where: { email } });
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -116,7 +121,10 @@ export class UserController extends appController {
     static async verifyEmail(req: Request, res: Response) {
         const { token: verificationCode } = req.query;
 
-        const user = await User.findOne({ where: { verificationCode } });
+        const userRepository = AppDataSource.getRepository(User);
+        const user = await userRepository.findOne({
+            where: { verificationCode: verificationCode as string }
+        });
 
         if (!user) {
             return res.status(404).json({ message: 'User not found' });
@@ -124,7 +132,7 @@ export class UserController extends appController {
 
         user.isVerified = true;
         user.verificationCode = '';
-        await user.save();
+        await userRepository.save(user);
 
         res.status(200).json({ message: 'User verified successfully' });
     }
@@ -149,6 +157,13 @@ export class UserController extends appController {
 
         const { name, email, password, confirmpassword } = req.body;
 
+        const userRepository = AppDataSource.getRepository(User);
+        const existingUser = await userRepository.findOne({ where: { id } });
+
+        if (!existingUser) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
         if (req.file) {
             user.avatar = req.file.filename;
         }
@@ -158,7 +173,7 @@ export class UserController extends appController {
             return;
         }
 
-        const checkIfUserExists = await User.findOne({ where: { email } });
+        const checkIfUserExists = await userRepository.findOne({ where: { email } });
 
         if (user?.email !== email && checkIfUserExists) {
             return res.status(400).json({ error: 'Email already in use' });
@@ -175,19 +190,9 @@ export class UserController extends appController {
         }
 
         try {
-            await User.update(
-                {
-                    name,
-                    email,
-                    avatar: user.avatar,
-                    password: user.password
-                },
-                {
-                    where: { id: id }
-                }
-            );
+            await userRepository.save(existingUser);
 
-            res.send('User edited successfully');
+            res.send({ message: 'User edited successfully', user: existingUser });
         } catch (error) {
             res.status(500).json({ message: error });
         }
@@ -220,8 +225,10 @@ export class UserController extends appController {
             if (typeof decoded === 'object' && decoded && 'id' in decoded) {
                 decoded = decoded as MyToken; // Now safely cast since we checked
 
-                currentUser = await User.findByPk(decoded.id, {
-                    attributes: { exclude: ['password'] }
+                const userRepository = AppDataSource.getRepository(User);
+                currentUser = await userRepository.findOne({
+                    where: { id: decoded.id },
+                    select: ['id', 'name', 'email', 'avatar'] // Exclude password
                 });
             } else {
                 throw new Error('Invalid token format');

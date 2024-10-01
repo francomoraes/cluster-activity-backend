@@ -6,24 +6,25 @@ import { validateEntity } from '../helpers/validate-entity';
 import { getMembers } from '../helpers/get-members';
 import { joinEntity } from '../helpers/join-entity';
 import { leaveEntity } from '../helpers/leave-entity';
+import AppDataSource from '../db/db';
 
 export class ChallengeController extends appController {
     getEntity() {
         return {
             name: 'Challenge',
-            model: Challenge
+            model: AppDataSource.getRepository(Challenge)
         };
     }
 
-    getIncludes() {
-        return [
-            {
-                model: User,
-                as: 'owner',
-                attributes: ['id', 'name', 'email']
-            }
-        ];
-    }
+    // getIncludes() {
+    //     return [
+    //         {
+    //             model: User,
+    //             as: 'owner',
+    //             attributes: ['id', 'name', 'email']
+    //         }
+    //     ];
+    // }
 
     // Pre-create behavior (validates and adds extra fields)
     protected async beforeCreate(data: any, req: Request) {
@@ -81,10 +82,13 @@ export class ChallengeController extends appController {
         if (!user) throw new Error('No user found');
 
         // Create UserChallenge association
-        await UserChallenge.create({
-            userId: user.id,
-            challengeId: challenge.id
+        const userChallengeRepository = AppDataSource.getRepository(UserChallenge);
+        const userChallenge = userChallengeRepository.create({
+            user,
+            challenge
         });
+
+        await userChallengeRepository.save(userChallenge);
 
         return challenge;
     }
@@ -95,7 +99,9 @@ export class ChallengeController extends appController {
         const data = req.body;
 
         try {
-            const challenge = await this.model.findByPk(challengeId);
+            const challengeRepository = AppDataSource.getRepository(Challenge);
+            const challenge = await challengeRepository.findOne({ where: { id: challengeId } });
+
             if (!challenge) {
                 res.status(404).json({ message: `${this.name} not found` });
                 return;
@@ -106,7 +112,9 @@ export class ChallengeController extends appController {
                 data.image = req.file.filename;
             }
 
-            await challenge.update(data);
+            challengeRepository.merge(challenge, data);
+            await challengeRepository.save(challenge);
+
             res.status(200).json(challenge);
         } catch (error: any) {
             res.status(500).json({ message: error.message });
@@ -128,8 +136,9 @@ export class ChallengeController extends appController {
         if (!workspace) return;
 
         try {
-            const challenges = await Challenge.findAll({
-                where: { workspaceId }
+            const challengeRepository = AppDataSource.getRepository(Challenge);
+            const challenges = await challengeRepository.find({
+                where: { workspace: { id: workspaceId } }
             });
             res.status(200).json(challenges);
         } catch (error: any) {
@@ -143,7 +152,14 @@ export class ChallengeController extends appController {
         const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
         if (!workspace) return;
 
-        return getMembers(req, res, Challenge, UserChallenge, challengeId, 'challengeId');
+        return getMembers(
+            req,
+            res,
+            AppDataSource.getRepository(Challenge),
+            AppDataSource.getRepository(UserChallenge),
+            challengeId,
+            'challengeId'
+        );
     }
 
     async joinChallenge(req: Request, res: Response) {
@@ -152,7 +168,14 @@ export class ChallengeController extends appController {
         const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
         if (!workspace) return;
 
-        return joinEntity(req, res, Challenge, UserChallenge, challengeId, 'challengeId');
+        return joinEntity(
+            req,
+            res,
+            AppDataSource.getRepository(Challenge),
+            AppDataSource.getRepository(UserChallenge),
+            challengeId,
+            'challengeId'
+        );
     }
 
     async leaveChallenge(req: Request, res: Response) {
@@ -161,6 +184,13 @@ export class ChallengeController extends appController {
         const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
         if (!workspace) return;
 
-        return leaveEntity(req, res, Challenge, UserChallenge, challengeId, 'challengeId');
+        return leaveEntity(
+            req,
+            res,
+            AppDataSource.getRepository(Challenge),
+            AppDataSource.getRepository(UserChallenge),
+            challengeId,
+            'challengeId'
+        );
     }
 }
