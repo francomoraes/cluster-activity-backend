@@ -113,7 +113,6 @@ export class WorkspaceController extends appController {
         }
     }
 
-    // Other methods (getById, delete, joinWorkspace, leaveWorkspace) remain the same
     async delete(req: Request, res: Response): Promise<void> {
         return super.delete(req, res, 'workspaceId');
     }

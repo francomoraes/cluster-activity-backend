@@ -29,10 +29,20 @@ export class ActivityController extends appController {
 
         if (!req.res) throw new Error('Response object not found');
 
-        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', req.res);
+        const workspace = await validateEntity(
+            AppDataSource.getRepository(Workspace),
+            workspaceId,
+            'Workspace',
+            req.res
+        );
         if (!workspace) throw new Error('Workspace not found');
 
-        const challenge = await validateEntity(Challenge, challengeId, 'Challenge', req.res);
+        const challenge = await validateEntity(
+            AppDataSource.getRepository(Challenge),
+            challengeId,
+            'Challenge',
+            req.res
+        );
         if (!challenge) throw new Error('Challenge not found');
 
         const token = getToken(req);

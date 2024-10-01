@@ -38,12 +38,18 @@ class Challenge {
     })
     image!: string;
 
+    @Column({ nullable: false })
+    ownerId!: string;
+
+    @Column({ nullable: false })
+    workspaceId!: string;
+
     @ManyToOne(() => User)
     @JoinColumn({ name: 'ownerId' })
     user!: User;
 
     @ManyToOne(() => Workspace)
-    @JoinColumn({ name: 'ownerId' })
+    @JoinColumn({ name: 'workspaceId' })
     workspace!: Workspace;
 }
 

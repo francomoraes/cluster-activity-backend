@@ -43,7 +43,12 @@ export class ChallengeController extends appController {
 
         if (!req.res) throw new Error('Response object not found');
         // Validate the workspace existence
-        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', req.res);
+        const workspace = await validateEntity(
+            AppDataSource.getRepository(Workspace),
+            workspaceId,
+            'Workspace',
+            req.res
+        );
         if (!workspace) throw new Error('Workspace not found');
 
         // Handle token and user validation
@@ -132,7 +137,12 @@ export class ChallengeController extends appController {
 
     async getAllByWorkspace(req: Request, res: Response) {
         const { workspaceId } = req.params;
-        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
+        const workspace = await validateEntity(
+            AppDataSource.getRepository(Workspace),
+            workspaceId,
+            'Workspace',
+            res
+        );
         if (!workspace) return;
 
         try {
@@ -149,7 +159,12 @@ export class ChallengeController extends appController {
     async getParticipants(req: Request, res: Response) {
         const { workspaceId, challengeId } = req.params;
 
-        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
+        const workspace = await validateEntity(
+            AppDataSource.getRepository(Workspace),
+            workspaceId,
+            'Workspace',
+            res
+        );
         if (!workspace) return;
 
         return getMembers(
@@ -165,7 +180,12 @@ export class ChallengeController extends appController {
     async joinChallenge(req: Request, res: Response) {
         const { workspaceId, challengeId } = req.params;
 
-        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
+        const workspace = await validateEntity(
+            AppDataSource.getRepository(Workspace),
+            workspaceId,
+            'Workspace',
+            res
+        );
         if (!workspace) return;
 
         return joinEntity(
@@ -181,7 +201,12 @@ export class ChallengeController extends appController {
     async leaveChallenge(req: Request, res: Response) {
         const { workspaceId, challengeId } = req.params;
 
-        const workspace = await validateEntity(Workspace, workspaceId, 'Workspace', res);
+        const workspace = await validateEntity(
+            AppDataSource.getRepository(Workspace),
+            workspaceId,
+            'Workspace',
+            res
+        );
         if (!workspace) return;
 
         return leaveEntity(

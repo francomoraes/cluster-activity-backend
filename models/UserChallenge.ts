@@ -1,4 +1,4 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './User';
 import { Challenge } from './Challenge';
 
@@ -6,6 +6,15 @@ import { Challenge } from './Challenge';
     name: 'user_challenges'
 })
 class UserChallenge {
+    @PrimaryGeneratedColumn()
+    id!: string;
+
+    @Column()
+    userId!: string;
+
+    @Column()
+    challengeId!: string;
+
     @ManyToOne(() => User)
     @JoinColumn({ name: 'userId' })
     user!: User;

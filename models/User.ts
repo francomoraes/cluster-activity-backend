@@ -7,7 +7,7 @@ class User {
     @PrimaryGeneratedColumn('uuid')
     id!: string;
 
-    @Column()
+    @Column({ type: 'varchar', nullable: false })
     name!: string;
 
     @Column()
@@ -26,7 +26,7 @@ class User {
     @Column({
         nullable: true
     })
-    avatar?: string | null;
+    avatar?: string;
 
     @Column({
         default: false

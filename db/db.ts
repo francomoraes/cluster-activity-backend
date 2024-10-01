@@ -21,7 +21,9 @@ const AppDataSource = new DataSource({
     password: process.env.DATABASE_PASSWORD,
     host: process.env.DATABASE_HOST,
     entities: [User, Workspace, Challenge, UserWorkspace, UserChallenge, Activity],
-    synchronize: true
+    synchronize: true,
+    logging: true,
+    dropSchema: true
 });
 
 export default AppDataSource;

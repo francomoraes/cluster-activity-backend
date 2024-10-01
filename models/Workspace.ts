@@ -36,6 +36,9 @@ class Workspace {
     })
     image!: string;
 
+    @Column({ nullable: false })
+    ownerId!: string;
+
     @ManyToOne(() => User)
     @JoinColumn({ name: 'ownerId' })
     user!: User;

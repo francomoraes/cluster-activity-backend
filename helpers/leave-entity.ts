@@ -43,9 +43,7 @@ export const leaveEntity = async (
         await userEntityModel.delete({ user: { id: user.id }, [idParamName]: entity.id });
 
         return res.status(200).json({
-            message: `User ${user.name} left ${entityModel.metadata.name} ${entity.getDataValue(
-                'name'
-            )} successfully`
+            message: `User ${user.name} left ${entityModel.metadata.name} ${entity.name} successfully`
         });
     } catch (error: any) {
         return res.status(500).json({ message: error.message });

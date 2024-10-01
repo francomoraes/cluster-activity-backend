@@ -15,14 +15,24 @@ class Activity {
     @Column({ nullable: true })
     description!: string;
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     image!: string;
 
     @Column()
     type!: string;
 
-    @Column()
+    @Column({
+        nullable: true
+    })
     duration!: number;
+
+    @Column()
+    ownerId!: string;
+
+    @Column()
+    challengeId!: string;
 
     @ManyToOne(() => User)
     @JoinColumn({ name: 'ownerId' })
