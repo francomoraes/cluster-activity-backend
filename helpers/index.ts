@@ -1,4 +1,3 @@
-export { default as checkOwnership } from './check-ownsership';
 export { default as checkToken } from './check-token';
 export { default as createUserToken } from './create-user-token';
 export { default as getToken } from './get-token';

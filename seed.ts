@@ -1,11 +1,8 @@
 // src/seed.ts
 import AppDataSource from './db/db';
+import { Asset, AssetType } from './models';
 import { User } from './models/User';
-import { Workspace } from './models/Workspace';
-import { Challenge } from './models/Challenge';
-import { Activity } from './models/Activity';
-import { UserChallenge } from './models/UserChallenge';
-import { UserWorkspace } from './models/UserWorkspace';
+import { UserCustomAssetType } from './models/UserCustomAssetType';
 import { v4 as uuidv4 } from 'uuid';
 
 async function seedDatabase() {
@@ -15,21 +12,15 @@ async function seedDatabase() {
 
         // Repositories
         const userRepository = AppDataSource.getRepository(User);
-        const workspaceRepository = AppDataSource.getRepository(Workspace);
-        const challengeRepository = AppDataSource.getRepository(Challenge);
-        const activityRepository = AppDataSource.getRepository(Activity);
-        const userChallengeRepository = AppDataSource.getRepository(UserChallenge);
-        const userWorkspaceRepository = AppDataSource.getRepository(UserWorkspace);
+        const assetRepository = AppDataSource.getRepository(Asset);
+        const assetTypeRepository = AppDataSource.getRepository(AssetType);
+        const userCustomAssetTypeRepository = AppDataSource.getRepository(UserCustomAssetType);
 
         // Fixed UUIDs for seeding consistency
         const user1Id = uuidv4();
         const user2Id = uuidv4();
-        const workspace1Id = uuidv4();
-        const workspace2Id = uuidv4();
-        const challenge1Id = uuidv4();
-        const challenge2Id = uuidv4();
-        const activity1Id = uuidv4();
-        const activity2Id = uuidv4();
+        const customType1Id = uuidv4();
+        const customType2Id = uuidv4();
 
         // Seed Users
         const user1 = userRepository.create({
@@ -49,95 +40,84 @@ async function seedDatabase() {
         await userRepository.save([user1, user2]);
         console.log('Users seeded');
 
-        // Seed Workspaces
-        const workspace1 = workspaceRepository.create({
-            id: workspace1Id,
-            name: 'Development Workspace',
-            user: user1
+        // Seed Global Asset Types
+        const assetType1 = assetTypeRepository.create({
+            asset_class: 'Renda fixa',
+            asset_type: 'Bonds Curtos'
         });
 
-        const workspace2 = workspaceRepository.create({
-            id: workspace2Id,
-            name: 'Testing Workspace',
-            user: user2
+        const assetType2 = assetTypeRepository.create({
+            asset_class: 'Mercado Imobiliário',
+            asset_type: 'Reits'
         });
 
-        await workspaceRepository.save([workspace1, workspace2]);
-        console.log('Workspaces seeded');
-
-        // Seed Challenges
-        const challenge1 = challengeRepository.create({
-            id: challenge1Id,
-            name: 'Initial Challenge 1',
-            startDate: new Date(),
-            endDate: new Date(),
-            isActive: true,
-            user: user1, // Set the relationship to user1
-            workspace: workspace1 // Set the relationship to workspace1
+        const assetType3 = assetTypeRepository.create({
+            asset_class: 'Stocks',
+            asset_type: 'Stocks'
         });
 
-        const challenge2 = challengeRepository.create({
-            id: challenge2Id,
-            name: 'Initial Challenge 2',
-            startDate: new Date(),
-            endDate: new Date(),
-            isActive: true,
-            user: user2, // Set the relationship to user2
-            workspace: workspace2 // Set the relationship to workspace2
+        await assetTypeRepository.save([assetType1, assetType2, assetType3]);
+        console.log('Global Asset Types seeded');
+
+        // Seed User Custom Asset Types
+        const customType1 = userCustomAssetTypeRepository.create({
+            user_id: user1.id,
+            asset_class: 'Crypto',
+            asset_type: 'Bitcoin'
         });
 
-        await challengeRepository.save([challenge1, challenge2]);
-        console.log('Challenges seeded');
-
-        // Seed Activities
-        const activity1 = activityRepository.create({
-            id: activity1Id,
-            title: 'First Activity',
-            type: 'Task',
-            duration: 60,
-            user: user1, // Set the relationship to user1
-            challenge: challenge1 // Set the relationship to challenge1
+        const customType2 = userCustomAssetTypeRepository.create({
+            user_id: user2.id,
+            asset_class: 'Commodities',
+            asset_type: 'Gold'
         });
 
-        const activity2 = activityRepository.create({
-            id: activity2Id,
-            title: 'Second Activity',
-            type: 'Task',
-            duration: 90,
-            user: user2, // Set the relationship to user2
-            challenge: challenge2 // Set the relationship to challenge2
+        await userCustomAssetTypeRepository.save([customType1, customType2]);
+        console.log('User Custom Asset Types seeded');
+
+        // Seed Assets
+        const asset1 = assetRepository.create({
+            user_id: user1.id,
+            global_asset_type: assetType1, // Link to a global asset type
+            asset_ticker: 'SHV',
+            asset_qty: 23.28,
+            avg_price: 110.35,
+            current_price: 110.58,
+            currency: 'USD'
         });
 
-        await activityRepository.save([activity1, activity2]);
-        console.log('Activities seeded');
-
-        // Seed UserWorkspaces (Associations between Users and Workspaces)
-        const userWorkspace1 = userWorkspaceRepository.create({
-            user: user1,
-            workspace: workspace1
+        const asset2 = assetRepository.create({
+            user_id: user1.id,
+            custom_asset_type: customType1, // Link to a user custom asset type
+            asset_ticker: 'BTC',
+            asset_qty: 0.5,
+            avg_price: 45000,
+            current_price: 50000,
+            currency: 'USD'
         });
 
-        const userWorkspace2 = userWorkspaceRepository.create({
-            user: user2,
-            workspace: workspace2
+        const asset3 = assetRepository.create({
+            user_id: user2.id,
+            global_asset_type: assetType2, // Link to a global asset type
+            asset_ticker: 'VNQ',
+            asset_qty: 20,
+            avg_price: 100.0,
+            current_price: 110.0,
+            currency: 'USD'
         });
 
-        await userWorkspaceRepository.save([userWorkspace1, userWorkspace2]);
-        console.log('UserWorkspaces seeded');
-
-        // Seed UserChallenges (Associations between Users and Challenges)
-        const userChallenge1 = userChallengeRepository.create({
-            userId: user1.id,
-            challengeId: challenge1.id
+        const asset4 = assetRepository.create({
+            user_id: user2.id,
+            custom_asset_type: customType2, // Link to a user custom asset type
+            asset_ticker: 'GLD',
+            asset_qty: 10,
+            avg_price: 1800.0,
+            current_price: 1900.0,
+            currency: 'USD'
         });
 
-        const userChallenge2 = userChallengeRepository.create({
-            userId: user2.id,
-            challengeId: challenge2.id
-        });
-
-        await userChallengeRepository.save([userChallenge1, userChallenge2]);
-        console.log('UserChallenges seeded');
+        await assetRepository.save([asset1, asset2, asset3, asset4]);
+        console.log('Assets seeded');
 
         console.log('Database seeding completed successfully!');
     } catch (error) {

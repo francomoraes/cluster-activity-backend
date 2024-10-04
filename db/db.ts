@@ -1,6 +1,9 @@
 import { DataSource } from 'typeorm';
 import dotenv from 'dotenv';
-import { Activity, Challenge, User, UserChallenge, UserWorkspace, Workspace } from '../models';
+import { User } from '../models';
+import { Asset } from '../models/Assets';
+import { AssetType } from '../models/AssetTypes';
+import { UserCustomAssetType } from '../models/UserCustomAssetType';
 
 dotenv.config();
 
@@ -20,7 +23,7 @@ const AppDataSource = new DataSource({
     username: process.env.DATABASE_USER,
     password: process.env.DATABASE_PASSWORD,
     host: process.env.DATABASE_HOST,
-    entities: [User, Workspace, Challenge, UserWorkspace, UserChallenge, Activity],
+    entities: [User, Asset, AssetType, UserCustomAssetType],
     synchronize: true,
     logging: true,
     dropSchema: true

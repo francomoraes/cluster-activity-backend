@@ -1,10 +1,10 @@
 import express from 'express';
 import cors from 'cors';
 import UserRoutes from './routes/UserRoutes';
-import WorkspaceRoutes from './routes/WorkspaceRoutes';
 import authRouter from './routes/oauth';
 import requestRouter from './routes/request';
 import AppDataSource from './db/db';
+import AssetRoutes from './routes/AssetRoutes';
 
 const app = express();
 
@@ -18,7 +18,7 @@ app.use(
 app.use(express.static('public'));
 
 app.use('/users', UserRoutes);
-app.use('/workspaces', WorkspaceRoutes);
+app.use('/assets', AssetRoutes);
 app.use('/auth/google', authRouter);
 app.use('/request', requestRouter);
 

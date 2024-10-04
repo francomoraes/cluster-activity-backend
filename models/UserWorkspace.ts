@@ -1,6 +1,6 @@
 import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { User } from './User';
-import { Workspace } from './Workspace';
+import { Workspace } from './Assets';
 
 @Entity({
     name: 'user_workspaces'
