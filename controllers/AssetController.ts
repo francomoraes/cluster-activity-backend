@@ -37,7 +37,6 @@ export class AssetController extends appController {
         } = data;
         const missingFields: string[] = [];
 
-        // Validate required fields
         if (!asset_class) missingFields.push('asset_class');
         if (!asset_type) missingFields.push('asset_type');
         if (!asset_ticker) missingFields.push('asset_ticker');
@@ -56,14 +55,10 @@ export class AssetController extends appController {
         const user = await getUserByToken(token);
         if (!user) throw new Error('No user found');
 
-        console.log('check');
-
         const assetData = {
             ...data,
             user_id: user.id
         };
-
-        console.log('check2', assetData);
 
         return assetData;
     }
