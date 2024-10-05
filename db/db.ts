@@ -3,7 +3,6 @@ import dotenv from 'dotenv';
 import { User } from '../models';
 import { Asset } from '../models/Assets';
 import { AssetType } from '../models/AssetTypes';
-import { UserCustomAssetType } from '../models/UserCustomAssetType';
 
 dotenv.config();
 
@@ -23,10 +22,10 @@ const AppDataSource = new DataSource({
     username: process.env.DATABASE_USER,
     password: process.env.DATABASE_PASSWORD,
     host: process.env.DATABASE_HOST,
-    entities: [User, Asset, AssetType, UserCustomAssetType],
+    entities: [User, Asset, AssetType],
     synchronize: true,
-    logging: true,
-    dropSchema: true
+    // dropSchema: true,
+    logging: true
 });
 
 export default AppDataSource;

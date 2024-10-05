@@ -1,32 +1,20 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
-import { AssetType } from './AssetTypes';
-import { UserCustomAssetType } from './UserCustomAssetType';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
 @Entity({
     name: 'assets'
 })
 class Asset {
-    @PrimaryGeneratedColumn()
+    @PrimaryGeneratedColumn('increment')
     id!: number;
 
     @Column({ type: 'uuid' })
-    user_id!: string; // References the id in the User table
+    user_id!: string;
 
-    @Column({ nullable: true })
-    global_asset_type_id!: number;
+    @Column({ type: 'varchar', length: 255 })
+    asset_class!: string;
 
-    @ManyToOne(() => AssetType, (assetType) => assetType.id, { nullable: true })
-    @JoinColumn({ name: 'global_asset_type_id' })
-    global_asset_type!: AssetType | null;
-
-    @Column({ nullable: true })
-    custom_asset_type_id!: number;
-
-    @ManyToOne(() => UserCustomAssetType, (userCustomAssetType) => userCustomAssetType.id, {
-        nullable: true
-    })
-    @JoinColumn({ name: 'custom_asset_type_id' })
-    custom_asset_type!: UserCustomAssetType | null;
+    @Column({ type: 'varchar', length: 255 })
+    asset_type!: string;
 
     @Column({ type: 'varchar', length: 10 })
     asset_ticker!: string;
@@ -42,6 +30,9 @@ class Asset {
 
     @Column({ type: 'varchar', length: 3 })
     currency!: string;
+
+    @Column({ type: 'varchar', length: 255 })
+    custody!: string;
 }
 
 export { Asset };

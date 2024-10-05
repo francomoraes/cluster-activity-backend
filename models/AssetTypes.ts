@@ -1,4 +1,5 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { User } from './User';
 
 @Entity({
     name: 'asset_types'
@@ -6,6 +7,10 @@ import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 class AssetType {
     @PrimaryGeneratedColumn()
     id!: number;
+
+    @ManyToOne(() => User, (user) => user.id, { onDelete: 'CASCADE' })
+    @JoinColumn({ name: 'user_id' })
+    user!: User;
 
     @Column({ type: 'varchar', length: 255 })
     asset_class!: string;
